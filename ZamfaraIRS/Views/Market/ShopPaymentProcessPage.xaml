@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Market.ShopPaymentProcessPage"
+            Title="Shop Repayment"
+             BackgroundColor="#F9FAFB">
+    <Grid>
+        <ScrollView>
+            <StackLayout Padding="20" Spacing="14">
+                <Label Text="Collect Shop Repayment" FontSize="20" FontAttributes="Bold" TextColor="#111827" />
+
+                <Label Text="Market" FontSize="12" TextColor="#4B5563" />
+                <Picker ItemsSource="{Binding Markets}" ItemDisplayBinding="{Binding Market_Plaza}" SelectedItem="{Binding SelectedMarket}" />
+
+                <Label Text="Shop Number" FontSize="12" TextColor="#4B5563" />
+                <Entry Text="{Binding ShopNo}" Placeholder="e.g. GCM014" />
+
+                <Label Text="Current Occupant Name" FontSize="12" TextColor="#4B5563" />
+                <Entry Text="{Binding OccupantName}" Placeholder="e.g. Jane Doe" />
+
+                <Label Text="Months to Pay" FontSize="12" TextColor="#4B5563" />
+                <Entry Text="{Binding Months}" Keyboard="Numeric" Placeholder="1" />
+
+                <Button Text="Preview Total &amp; Verify" Command="{Binding VerifyAndCalculateCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" />
+
+                <Frame IsVisible="{Binding IsVerified}" BackgroundColor="#ECFDF5" BorderColor="#10B981" CornerRadius="8" Padding="14">
+                    <StackLayout Spacing="6">
+                        <Label Text="{Binding TotalCalculated, StringFormat='Total Payable: ₦{0}'}" FontSize="18" FontAttributes="Bold" TextColor="#065F46" />
+                        <Button Text="Confirm &amp; Collect Payment" Command="{Binding CompletePaymentCommand}" BackgroundColor="#059669" TextColor="White" CornerRadius="6" />
+                    </StackLayout>
+                </Frame>
+            </StackLayout>
+        </ScrollView>
+
+        <!-- SUCCESS BOTTOM SHEET OVERLAY -->
+        <ContentView IsVisible="{Binding ShowSuccessSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
+            <StackLayout VerticalOptions="End" BackgroundColor="White" Padding="24" Spacing="14">
+                <BoxView HeightRequest="4" WidthRequest="40" BackgroundColor="#E5E7EB" HorizontalOptions="Center" CornerRadius="2" />
+                <Label Text="✓" FontSize="42" TextColor="#059669" HorizontalOptions="Center" />
+                <Label Text="Payment Successful" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#111827" />
+                <Label Text="{Binding TotalCalculated, StringFormat='Amount: ₦{0}'}" FontSize="16" HorizontalOptions="Center" TextColor="#374151" />
+
+                <Button Text="🖶 Print Payment Receipt" Command="{Binding PrintReceiptCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" />
+                <Button Text="Done" Command="{Binding DismissSheetsCommand}" BackgroundColor="#F3F4F6" TextColor="#374151" CornerRadius="8" />
+            </StackLayout>
+        </ContentView>
+
+        <!-- ERROR BOTTOM SHEET OVERLAY -->
+        <ContentView IsVisible="{Binding ShowErrorSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
+            <StackLayout VerticalOptions="End" BackgroundColor="White" Padding="24" Spacing="14">
+                <BoxView HeightRequest="4" WidthRequest="40" BackgroundColor="#E5E7EB" HorizontalOptions="Center" CornerRadius="2" />
+                <Label Text="✕" FontSize="42" TextColor="#DC2626" HorizontalOptions="Center" />
+                <Label Text="Payment Failed" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#111827" />
+                <Label Text="{Binding ErrorMessage}" FontSize="14" HorizontalOptions="Center" TextColor="#6B7280" HorizontalTextAlignment="Center" />
+
+                <Button Text="Retry" Command="{Binding DismissSheetsCommand}" BackgroundColor="#DC2626" TextColor="White" CornerRadius="8" />
+            </StackLayout>
+        </ContentView>
+    </Grid>
+</ContentPage>

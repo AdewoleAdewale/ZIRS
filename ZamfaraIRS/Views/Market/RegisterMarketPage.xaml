@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Market.RegisterMarketPage"
+             Title="Register Market / Complex">
+<ScrollView>
+    <StackLayout Padding="20" Spacing="15">
+        <Label Text="Register New Market" FontSize="20" FontAttributes="Bold" />
+
+        <Label Text="Market / Plaza Name" />
+        <Entry Text="{Binding MarketPlaza}" Placeholder="e.g. Gusau Central Market" />
+
+        <Label Text="Market Code" />
+        <Entry Text="{Binding MktCode}" Placeholder="e.g. GCM" />
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <Button Text="Submit Registration" 
+                    Command="{Binding RegisterCommand}" 
+                    BackgroundColor="#005A9C" 
+                    TextColor="White" 
+                    CornerRadius="8" />
+    </StackLayout>
+</ScrollView>
+</ContentPage>

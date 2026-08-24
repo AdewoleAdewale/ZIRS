@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Market.ShopCalculatorPage" Title="Rent Calculator">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+            <Label Text="Calculate Rent by Duration" FontSize="20" FontAttributes="Bold" />
+
+            <Label Text="Shop Number" />
+            <Entry Text="{Binding ShopNo}" Placeholder="e.g. GCM014" />
+
+            <Label Text="Number of Months" />
+            <Entry Text="{Binding NumberOfMonths}" Keyboard="Numeric" Placeholder="e.g. 6" />
+
+            <Button Text="Calculate Total Amount" 
+                    Command="{Binding CalculateCommand}" 
+                    BackgroundColor="#005A9C" 
+                    TextColor="White" 
+                    CornerRadius="8" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            <!-- Result Card -->
+            <Frame IsVisible="{Binding HasResult}" BorderColor="#005A9C" CornerRadius="8" Padding="15">
+                <StackLayout Spacing="6" HorizontalOptions="Center">
+                    <Label Text="Calculated Total" FontSize="14" TextColor="Gray" HorizontalOptions="Center" />
+                    <Label Text="{Binding TotalAmount, StringFormat='₦{0}'}" FontSize="24" FontAttributes="Bold" TextColor="#2E7D32" HorizontalOptions="Center" />
+                </StackLayout>
+            </Frame>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

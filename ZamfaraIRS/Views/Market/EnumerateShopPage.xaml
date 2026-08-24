@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Market.EnumerateShopPage"
+             Title="Shop Enumeration">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+            <Label Text="Enumerate New Shop" FontSize="20" FontAttributes="Bold" />
+
+            <Label Text="Select Market" />
+            <Picker ItemsSource="{Binding Markets}" 
+                    ItemDisplayBinding="{Binding Market_Plaza}" 
+                    SelectedItem="{Binding SelectedMarket}" />
+
+            <Label Text="Select Category" />
+            <Picker ItemsSource="{Binding Categories}" 
+                    ItemDisplayBinding="{Binding ShopCategoryName}" 
+                    SelectedItem="{Binding SelectedCategory}" />
+
+            <Label Text="Shop Number (Suffix)" />
+            <Entry Text="{Binding ShopNo}" Placeholder="e.g. 014" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            <Button Text="Save &amp; Register Shop" 
+                    Command="{Binding EnumerateCommand}" 
+                    BackgroundColor="#2E7D32" 
+                    TextColor="White" 
+                    CornerRadius="8" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

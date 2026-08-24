@@ -2,6 +2,8 @@
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using ZamfaraIRS.Services;
+using ZamfaraIRS.Views;
+using ZamfaraIRS.Views.Market;
 
 namespace ZamfaraIRS
 {
@@ -9,60 +11,89 @@ namespace ZamfaraIRS
     {
         public static bool IsUserLoggedIn { get; set; }
         public static string PrinterFooter { get; set; }
-        public static string PrinterforWaterPayment { get; set; }
         public static string RevenueServiceName { get; set; }
         public static string CentralPortalURL { get; set; }
-        public static string CentralPortalURLkeke { get; set; }
         public static string ThankYouMessage { get; set; }
-        public static string ThankYouMessage2 { get; set; }
 
-        /// <summary>
-        /// Shared <see cref="IPrinterService"/> instance used across all pages.
-        /// Use this for availability checks and direct print calls.
-        /// </summary>
         public static IPrinterService Printer { get; private set; }
-
-        /// <summary>
-        /// Durable job queue that persists receipts to disk so they can be
-        /// retried automatically after a crash, Bluetooth drop, or app restart.
-        /// All pages must use <c>App.PrintJobManager</c> rather than calling
-        /// <c>Printer</c> directly.
-        /// </summary>
         public static PrintJobManager PrintJobManager { get; private set; }
+        public object SessionService { get; private set; }
+
         public App()
         {
             InitializeComponent();
 
             CentralPortalURL = "https://zamfara.osoftpay.net/api/SingleCollections/PostCollect/NewCollect";
-            RevenueServiceName = "ZAMFARA STATE INTERNAL REVENUE SERVICE(ZIRS) ";
+            RevenueServiceName = "ZAMFARA STATE INTERNAL REVENUE SERVICE (ZIRS)";
             PrinterFooter = "POWERED BY OSOFTPAY";
             ThankYouMessage = "THANK YOU FOR MAKING YOUR PAYMENT!";
-            ThankYouMessage2 = "THANK YOU FOR ENUMERATION!";
+
+            // 1. SSL Handling
             ZamfaraIRS.Services.SslHandler.ConfigureSSL();
+
+            // 2. Printing Subsystem & Job Queue Init
             Printer = new BluetoothPrinterService(use80mm: false);
             PrintJobManager = new PrintJobManager(Printer);
 
-            if (!IsUserLoggedIn)
+            // 3. Check Session / Auto-login
+            if (SessionManager.Instance.TryAutoLoginAsync().GetAwaiter().GetResult())
             {
-
-                MainPage = new MainPage();
+                IsUserLoggedIn = true;
+                SessionManager.Instance.StartSession();
+                MainPage = new NavigationPage(new Dashboard())
+                {
+                    BarBackgroundColor = Color.FromHex("#064E3B"),
+                    BarTextColor = Color.White
+                };
             }
             else
             {
-                MainPage = new MainPage();
+                MainPage = new NavigationPage(new MainPage())
+                {
+                    BarBackgroundColor = Color.FromHex("#064E3B"),
+                    BarTextColor = Color.White
+                };
             }
         }
 
-        protected override void OnStart()
+        protected override async void OnStart()
         {
+            // Automatic login routing via SessionManager
+            bool isLoggedIn = await SessionManager.Instance.TryAutoLoginAsync();
+
+            if (isLoggedIn)
+            {
+                MainPage = new NavigationPage(new ZamfaraIRS.Views.Market.Dashboard())
+                {
+                    BarBackgroundColor = Color.FromHex("#064E3B"),
+                    BarTextColor = Color.White
+                };
+
+                _ = ReceiptPrinter.RetryPendingAsync(); 
+    }
+            else
+            {
+                MainPage = new NavigationPage(new MainPage())
+                {
+                    BarBackgroundColor = Color.FromHex("#064E3B"),
+                    BarTextColor = Color.White
+                };
+            }
         }
 
         protected override void OnSleep()
         {
+            SessionManager.Instance.StopSession();
         }
 
         protected override void OnResume()
         {
+            if (IsUserLoggedIn)
+            {
+                SessionManager.Instance.StartSession();
+                SessionManager.Instance.UpdateActivity();
+                _ = ReceiptPrinter.RetryPendingAsync();
+            }
         }
     }
 }

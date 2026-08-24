@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Market.ShopVerifyPage"
+             Title="Verify Shop Unit"
+             BackgroundColor="#F9FAFB">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+            <Label Text="Quick Shop Lookup" FontSize="20" FontAttributes="Bold" TextColor="#111827" />
+            <Label Text="Verify registration and owing status by shop number and occupant name." FontSize="13" TextColor="#6B7280" />
+
+            <Label Text="Shop Number *" FontSize="12" FontAttributes="Bold" TextColor="#374151" />
+            <Frame CornerRadius="8" Padding="10,0" BorderColor="#D1D5DB" HasShadow="False">
+                <Entry Text="{Binding ShopNo}" Placeholder="e.g. GCM014" />
+            </Frame>
+
+            <Label Text="Occupant Name *" FontSize="12" FontAttributes="Bold" TextColor="#374151" />
+            <Frame CornerRadius="8" Padding="10,0" BorderColor="#D1D5DB" HasShadow="False">
+                <Entry Text="{Binding OccupantName}" Placeholder="e.g. Jane Doe" />
+            </Frame>
+
+            <Button Text="Search &amp; Verify" 
+                    Command="{Binding VerifyCommand}" 
+                    BackgroundColor="#064E3B" 
+                    TextColor="White" 
+                    CornerRadius="8" 
+                    HeightRequest="48"
+                    FontAttributes="Bold" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" />
+
+            <!-- Result Card -->
+            <Frame IsVisible="{Binding HasResult}" CornerRadius="12" BackgroundColor="White" BorderColor="#E5E7EB" Padding="16" HasShadow="False">
+                <StackLayout Spacing="8">
+                    <Label Text="{Binding Result.Message}" FontSize="16" FontAttributes="Bold" TextColor="{Binding StatusTextColor}" />
+                    <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" />
+                    <Grid ColumnDefinitions="*, *">
+                        <Label Grid.Column="0" Text="Category:" FontSize="13" TextColor="#6B7280" />
+                        <Label Grid.Column="1" Text="{Binding Result.ShopCat}" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="End" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*, *">
+                        <Label Grid.Column="0" Text="Amount Rate:" FontSize="13" TextColor="#6B7280" />
+                        <Label Grid.Column="1" Text="{Binding Result.Amount, StringFormat='₦{0}'}" FontSize="13" FontAttributes="Bold" TextColor="#065F46" HorizontalTextAlignment="End" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*, *">
+                        <Label Grid.Column="0" Text="Market ID:" FontSize="13" TextColor="#6B7280" />
+                        <Label Grid.Column="1" Text="{Binding Result.MarketId}" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="End" />
+                    </Grid>
+                </StackLayout>
+            </Frame>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

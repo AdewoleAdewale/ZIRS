@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Market.ShopPaymentHistoryPage"
+             Title="Shop Payment History">
+    <StackLayout Padding="15" Spacing="10">
+        <Label Text="Enter Shop Number" />
+        <Entry Text="{Binding ShopNo}" Placeholder="e.g. GCM014" />
+
+        <Button Text="Load Recent Payments" Command="{Binding LoadHistoryCommand}" BackgroundColor="#005A9C" TextColor="White" />
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <ListView ItemsSource="{Binding Payments}" HasUnevenRows="True">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <StackLayout Padding="10" Spacing="3">
+                            <Label Text="{Binding Payer, StringFormat='Payer ID: {0}'}" FontAttributes="Bold" />
+                            <Label Text="{Binding Amount, StringFormat='Amount: ₦{0:N2}'}" TextColor="Green" />
+                            <Label Text="{Binding DateRecorded, StringFormat='Date: {0:yyyy-MM-dd HH:mm}'}" FontSize="12" TextColor="Gray" />
+                        </StackLayout>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackLayout>
+</ContentPage>

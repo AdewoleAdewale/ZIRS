@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Market.VerifyRepaymentPage"
+             Title="Verify Repayment &amp; Ownership">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+            <Label Text="Pre-Repayment Verification" FontSize="20" FontAttributes="Bold" />
+
+            <Label Text="Market" />
+            <Picker ItemsSource="{Binding Markets}" 
+                    ItemDisplayBinding="{Binding Market_Plaza}" 
+                    SelectedItem="{Binding SelectedMarket}" />
+
+            <Label Text="Shop Number" />
+            <Entry Text="{Binding ShopNo}" Placeholder="e.g. GCM014" />
+
+            <Label Text="Current Occupant Name" />
+            <Entry Text="{Binding OccupantName}" Placeholder="e.g. Jane Doe" />
+
+            <Button Text="Verify Ownership" Command="{Binding VerifyRepayCommand}" BackgroundColor="#005A9C" TextColor="White" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            <Frame IsVisible="{Binding HasResult}" BorderColor="#2E7D32" CornerRadius="8" Padding="15">
+                <StackLayout Spacing="6">
+                    <Label Text="Verification Successful" FontAttributes="Bold" TextColor="Green" FontSize="16" />
+                    <Label Text="{Binding RepayResult.Owner, StringFormat='Owner/Occupant: {0}'}" />
+                    <Label Text="{Binding RepayResult.ShopCategory, StringFormat='Category: {0}'}" />
+                    <Label Text="{Binding RepayResult.ShopAmount, StringFormat='Base Rate: ₦{0}'}" />
+                    <Label Text="{Binding RepayResult.AmountOwed, StringFormat='Amount Owed: ₦{0}'}" TextColor="Red" />
+                </StackLayout>
+            </Frame>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

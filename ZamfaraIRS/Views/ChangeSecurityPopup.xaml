@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.ChangeSecurityPopup" 
+             BackgroundColor="#80000000">
+    <StackLayout VerticalOptions="End" BackgroundColor="White" Padding="20" Spacing="15">
+        <BoxView HeightRequest="4" WidthRequest="40" BackgroundColor="#CCCCCC" HorizontalOptions="Center" CornerRadius="2" />
+
+        <Label Text="{Binding TitleText}" FontSize="18" FontAttributes="Bold" TextColor="#111827" />
+
+        <Label Text="Current Value" FontSize="12" TextColor="Gray" />
+        <Entry Text="{Binding CurrentValue}" IsPassword="True" Placeholder="Enter Current" />
+
+        <Label Text="New Value" FontSize="12" TextColor="Gray" />
+        <Entry Text="{Binding NewValue}" IsPassword="True" Keyboard="{Binding InputKeyboard}" Placeholder="Enter New" />
+
+        <Button Text="Update" Command="{Binding SubmitCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" />
+        <Button Text="Cancel" Command="{Binding CancelCommand}" BackgroundColor="Transparent" TextColor="#6B7280" />
+    </StackLayout>
+</ContentPage>

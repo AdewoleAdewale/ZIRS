@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Market.VerifyShopPage"
+             Title="Verify Shop Status">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+            <Label Text="Verify Shop Owing Status" FontSize="20" FontAttributes="Bold" />
+
+            <Label Text="Market" />
+            <Picker ItemsSource="{Binding Markets}" 
+                    ItemDisplayBinding="{Binding Market_Plaza}" 
+                    SelectedItem="{Binding SelectedMarket}" />
+
+            <Label Text="Full Shop Number" />
+            <Entry Text="{Binding ShopNo}" Placeholder="e.g. GCM014" />
+
+            <Button Text="Check Status" Command="{Binding VerifyCommand}" BackgroundColor="#005A9C" TextColor="White" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            <!-- Result Card -->
+            <Frame IsVisible="{Binding HasResult}" BorderColor="#CCCCCC" CornerRadius="8" Padding="15">
+                <StackLayout Spacing="8">
+                    <Label Text="{Binding VerificationResult.Message}" FontAttributes="Bold" FontSize="16" TextColor="{Binding StatusColor}" />
+                    <Label Text="{Binding VerificationResult.AmountOwed, StringFormat='Amount Owed: ₦{0}'}" />
+                    <Label Text="{Binding VerificationResult.AmountPaid, StringFormat='Amount Paid: ₦{0}'}" />
+                    <Label Text="{Binding VerificationResult.LastPaymentDate, StringFormat='Last Payment: {0}'}" />
+                </StackLayout>
+            </Frame>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

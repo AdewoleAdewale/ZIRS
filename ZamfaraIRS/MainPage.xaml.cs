@@ -1,13 +1,9 @@
 ﻿using Acr.UserDialogs;
-using Android.Views;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,23 +43,10 @@ namespace ZamfaraIRS
             try
             {
                 InitializeComponent();
-            
+
                 var handler = new HttpClientHandler
                 {
-                    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
-                    {
-                        // WARNING: Accepting all certificates is insecure for production
-                        // Only use this for development/testing
-                        // For production, implement proper certificate validation
-                        if (errors == System.Net.Security.SslPolicyErrors.None)
-                            return true;
-
-                        System.Diagnostics.Debug.WriteLine($"SSL Error: {errors}");
-                        System.Diagnostics.Debug.WriteLine($"Certificate Subject: {cert?.Subject}");
-
-                        // Accept all certificates for development
-                        return true;
-                    },
+                    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
                     SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
                                    System.Security.Authentication.SslProtocols.Tls11
                 };
@@ -73,7 +56,6 @@ namespace ZamfaraIRS
                     Timeout = TimeSpan.FromSeconds(REQUEST_TIMEOUT_SECONDS)
                 };
 
-                // Set SecurityProtocol for older .NET Framework compatibility
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
 
                 CheckLockoutStatus();
@@ -119,26 +101,21 @@ namespace ZamfaraIRS
         #endregion
 
         #region Credential Management
-        /// <summary>
-        /// Load saved credentials if "Remember Me" was checked
-        /// </summary>
         private async Task LoadSavedCredentials()
         {
             try
             {
-                bool hasSavedCredentials = await SecureStorageService.HasSavedCredentialsAsync();
-
-                if (hasSavedCredentials)
+                bool hasSaved = await SecureStorageService.HasSavedCredentialsAsync();
+                if (hasSaved)
                 {
                     var credentials = await SecureStorageService.GetCredentialsAsync();
-
                     if (credentials != null)
                     {
                         Email.Text = credentials.Email;
                         Password.Text = credentials.Password;
                         RememberMeCheckbox.IsChecked = true;
+                        SessionService.IsRememberMe = true;
 
-                        // Show subtle animation to indicate auto-fill
                         await Task.WhenAll(
                             EmailBorder.FadeTo(0.7, 200),
                             PasswordBorder.FadeTo(0.7, 200)
@@ -147,9 +124,13 @@ namespace ZamfaraIRS
                             EmailBorder.FadeTo(1, 200),
                             PasswordBorder.FadeTo(1, 200)
                         );
-
-                        System.Diagnostics.Debug.WriteLine("Credentials auto-filled from secure storage");
                     }
+                }
+                else if (SessionService.IsRememberMe && !string.IsNullOrEmpty(SessionService.SavedEmail))
+                {
+                    Email.Text = SessionService.SavedEmail;
+                    Password.Text = SessionService.SavedPassword;
+                    RememberMeCheckbox.IsChecked = true;
                 }
             }
             catch (Exception ex)
@@ -158,9 +139,6 @@ namespace ZamfaraIRS
             }
         }
 
-        /// <summary>
-        /// Handle Remember Me label tap
-        /// </summary>
         private void OnRememberMeLabelTapped(object sender, EventArgs e)
         {
             RememberMeCheckbox.IsChecked = !RememberMeCheckbox.IsChecked;
@@ -207,7 +185,6 @@ namespace ZamfaraIRS
                 );
 
                 await FooterSection.FadeTo(1, 400);
-
                 _ = AnimateLogoPulse();
             }
             catch (Exception ex)
@@ -341,248 +318,68 @@ namespace ZamfaraIRS
         }
         #endregion
 
-        #region Focus Event Handlers
-        private async void OnEmailFocused(object sender, FocusEventArgs e)
-        {
-            try
-            {
-                await AnimateInputFocus(EmailBorder, true);
-            }
-            catch (Exception ex)
-            {
-                LogError("OnEmailFocused", ex);
-            }
-        }
+        #region Focus & Validation
+        private async void OnEmailFocused(object sender, FocusEventArgs e) => await AnimateInputFocus(EmailBorder, true);
+        private async void OnPasswordFocused(object sender, FocusEventArgs e) => await AnimateInputFocus(PasswordBorder, true);
+        private async void OnEmailUnfocused(object sender, FocusEventArgs e) { await AnimateInputFocus(EmailBorder, false); ValidateEmail(Email.Text); }
+        private async void OnPasswordUnfocused(object sender, FocusEventArgs e) { await AnimateInputFocus(PasswordBorder, false); ValidatePassword(Password.Text); }
 
-        private async void OnPasswordFocused(object sender, FocusEventArgs e)
-        {
-            try
-            {
-                await AnimateInputFocus(PasswordBorder, true);
-            }
-            catch (Exception ex)
-            {
-                LogError("OnPasswordFocused", ex);
-            }
-        }
+        private void OnEmailTextChanged(object sender, TextChangedEventArgs e) { if (!string.IsNullOrWhiteSpace(e.NewTextValue)) ClearEmailError(); }
+        private void OnPasswordTextChanged(object sender, TextChangedEventArgs e) { if (!string.IsNullOrWhiteSpace(e.NewTextValue)) ClearPasswordError(); }
 
         private void OnForgotPasswordTapped(object sender, EventArgs e)
         {
-            try
+            Device.BeginInvokeOnMainThread(async () =>
             {
-                Device.BeginInvokeOnMainThread(async () =>
-                {
-                    await DisplayAlert("Forgot Password",
-                        "Please contact your administrator to reset your password.",
-                        "OK");
-                });
-            }
-            catch (Exception ex)
-            {
-                LogError("OnForgotPasswordTapped", ex);
-            }
+                await DisplayAlert("Forgot Password", "Please contact your Zamfara IRS administrator to reset your password.", "OK");
+            });
         }
 
-        private async void OnDismissErrorToast(object sender, EventArgs e)
-        {
-            try
-            {
-                await HideErrorToast();
-            }
-            catch (Exception ex)
-            {
-                LogError("OnDismissErrorToast", ex);
-            }
-        }
-        #endregion
-
-        #region Validation Methods
-        private void OnEmailTextChanged(object sender, TextChangedEventArgs e)
-        {
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(e.NewTextValue))
-                {
-                    ClearEmailError();
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError("OnEmailTextChanged", ex);
-            }
-        }
-
-        private void OnPasswordTextChanged(object sender, TextChangedEventArgs e)
-        {
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(e.NewTextValue))
-                {
-                    ClearPasswordError();
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError("OnPasswordTextChanged", ex);
-            }
-        }
-
-        private async void OnEmailUnfocused(object sender, FocusEventArgs e)
-        {
-            try
-            {
-                await AnimateInputFocus(EmailBorder, false);
-                ValidateEmail(Email.Text);
-            }
-            catch (Exception ex)
-            {
-                LogError("OnEmailUnfocused", ex);
-            }
-        }
-
-        private async void OnPasswordUnfocused(object sender, FocusEventArgs e)
-        {
-            try
-            {
-                await AnimateInputFocus(PasswordBorder, false);
-                ValidatePassword(Password.Text);
-            }
-            catch (Exception ex)
-            {
-                LogError("OnPasswordUnfocused", ex);
-            }
-        }
+        private async void OnDismissErrorToast(object sender, EventArgs e) => await HideErrorToast();
 
         private bool ValidateEmail(string email)
         {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(email))
-                {
-                    ShowEmailError("Email address is required");
-                    return false;
-                }
-
-                string emailPattern = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
-                if (!Regex.IsMatch(email.Trim(), emailPattern))
-                {
-                    ShowEmailError("Please enter a valid email address");
-                    return false;
-                }
-
-                if (email.Length > 254)
-                {
-                    ShowEmailError("Email address is too long");
-                    return false;
-                }
-
-                ClearEmailError();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogError("ValidateEmail", ex);
-                return false;
-            }
+            if (string.IsNullOrWhiteSpace(email)) { ShowEmailError("Email address is required"); return false; }
+            string emailPattern = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+            if (!Regex.IsMatch(email.Trim(), emailPattern)) { ShowEmailError("Please enter a valid email address"); return false; }
+            ClearEmailError();
+            return true;
         }
 
         private bool ValidatePassword(string password)
         {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(password))
-                {
-                    ShowPasswordError("Password is required");
-                    return false;
-                }
-
-                if (password.Length < 4)
-                {
-                    ShowPasswordError("Password must be at least 4 characters");
-                    return false;
-                }
-
-                if (password.Length > 128)
-                {
-                    ShowPasswordError("Password is too long");
-                    return false;
-                }
-
-                ClearPasswordError();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogError("ValidatePassword", ex);
-                return false;
-            }
+            if (string.IsNullOrWhiteSpace(password)) { ShowPasswordError("Password is required"); return false; }
+            if (password.Length < 4) { ShowPasswordError("Password must be at least 4 characters"); return false; }
+            ClearPasswordError();
+            return true;
         }
 
         private async void ShowEmailError(string message)
         {
-            try
+            await Device.InvokeOnMainThreadAsync(async () =>
             {
-                await Device.InvokeOnMainThreadAsync(async () =>
-                {
-                    EmailError.Text = message;
-                    EmailError.Opacity = 0;
-                    EmailError.IsVisible = true;
-                    EmailBorder.BorderColor = Color.FromHex("#FF6B6B");
-
-                    await Task.WhenAll(
-                        EmailError.FadeTo(1, 200),
-                        EmailBorder.ScaleTo(1.02, 100),
-                        EmailBorder.ScaleTo(1.0, 100)
-                    );
-                });
-            }
-            catch (Exception ex)
-            {
-                LogError("ShowEmailError", ex);
-            }
+                EmailError.Text = message;
+                EmailError.Opacity = 0;
+                EmailError.IsVisible = true;
+                EmailBorder.BorderColor = Color.FromHex("#FF6B6B");
+                await Task.WhenAll(EmailError.FadeTo(1, 200), EmailBorder.ScaleTo(1.02, 100), EmailBorder.ScaleTo(1.0, 100));
+            });
         }
 
         private async void ShowPasswordError(string message)
         {
-            try
+            await Device.InvokeOnMainThreadAsync(async () =>
             {
-                await Device.InvokeOnMainThreadAsync(async () =>
-                {
-                    PasswordError.Text = message;
-                    PasswordError.Opacity = 0;
-                    PasswordError.IsVisible = true;
-                    PasswordBorder.BorderColor = Color.FromHex("#FF6B6B");
-
-                    await Task.WhenAll(
-                        PasswordError.FadeTo(1, 200),
-                        PasswordBorder.ScaleTo(1.02, 100),
-                        PasswordBorder.ScaleTo(1.0, 100)
-                    );
-                });
-            }
-            catch (Exception ex)
-            {
-                LogError("ShowPasswordError", ex);
-            }
-        }
-
-        private void ClearEmailError()
-        {
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                EmailError.IsVisible = false;
-                EmailBorder.BorderColor = Color.FromHex("#2C3E50");
+                PasswordError.Text = message;
+                PasswordError.Opacity = 0;
+                PasswordError.IsVisible = true;
+                PasswordBorder.BorderColor = Color.FromHex("#FF6B6B");
+                await Task.WhenAll(PasswordError.FadeTo(1, 200), PasswordBorder.ScaleTo(1.02, 100), PasswordBorder.ScaleTo(1.0, 100));
             });
         }
 
-        private void ClearPasswordError()
-        {
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                PasswordError.IsVisible = false;
-                PasswordBorder.BorderColor = Color.FromHex("#2C3E50");
-            });
-        }
+        private void ClearEmailError() => Device.BeginInvokeOnMainThread(() => { EmailError.IsVisible = false; EmailBorder.BorderColor = Color.FromHex("#2C3E50"); });
+        private void ClearPasswordError() => Device.BeginInvokeOnMainThread(() => { PasswordError.IsVisible = false; PasswordBorder.BorderColor = Color.FromHex("#2C3E50"); });
         #endregion
 
         #region Login Methods
@@ -590,17 +387,11 @@ namespace ZamfaraIRS
         {
             try
             {
-                if (_isProcessing)
-                {
-                    return;
-                }
+                if (_isProcessing) return;
 
                 await AnimateButtonPress();
 
-                if (!CheckLockoutStatus())
-                {
-                    return;
-                }
+                if (!CheckLockoutStatus()) return;
 
                 string myEmail = Email?.Text?.Trim();
                 string myPassword = Password?.Text;
@@ -635,17 +426,17 @@ namespace ZamfaraIRS
             try
             {
                 _isProcessing = true;
-                await ShowLoading(true, "Signing in...", "Verifying your credentials");
+                await ShowLoading(true, "Signing in...", "Verifying your credentials with Zamfara IRS");
                 DisableLoginButton();
 
-                LoginResponse result = await LoginRequestAsync(email, password, _cancellationTokenSource.Token);
+                (LoginResponse result, string rawJson) = await LoginRequestAsync(email, password, _cancellationTokenSource.Token);
 
                 if (result == null)
                 {
                     throw new Exception("No response received from server");
                 }
 
-                await HandleLoginResponse(result, email, password);
+                await HandleLoginResponse(result, rawJson, email, password);
             }
             catch (OperationCanceledException)
             {
@@ -675,248 +466,167 @@ namespace ZamfaraIRS
             }
         }
 
-        private async Task<LoginResponse> LoginRequestAsync(string email, string password, CancellationToken cancellationToken)
+        private async Task<(LoginResponse, string)> LoginRequestAsync(string email, string password, CancellationToken cancellationToken)
         {
-            try
+            string sanitizedEmail = Uri.EscapeDataString(email);
+            string sanitizedPassword = Uri.EscapeDataString(password);
+
+            string url = $"https://zamfara.osoftpay.net/api/Taskpayers/v1/AgentLogin?UserName={sanitizedEmail}&Password={sanitizedPassword}";
+
+            using (var response = await _httpClient.GetAsync(url, cancellationToken))
             {
-                string sanitizedEmail = Uri.EscapeDataString(email);
-                string sanitizedPassword = Uri.EscapeDataString(password);
+                response.EnsureSuccessStatusCode();
+                string json = await response.Content.ReadAsStringAsync();
 
-                string url = $"https://yobe.osoftpay.net/api/Taskpayers/v1/AgentLogin?UserName={sanitizedEmail}&Password={sanitizedPassword}";
+                if (string.IsNullOrWhiteSpace(json))
+                    throw new Exception("Empty response received from server");
 
-                System.Diagnostics.Debug.WriteLine($"Attempting login to: {url}");
-
-                using (var response = await _httpClient.GetAsync(url, cancellationToken))
-                {
-                    System.Diagnostics.Debug.WriteLine($"Response Status: {response.StatusCode}");
-
-                    response.EnsureSuccessStatusCode();
-
-                    string json = await response.Content.ReadAsStringAsync();
-                    System.Diagnostics.Debug.WriteLine($"Response JSON: {json}");
-
-                    if (string.IsNullOrWhiteSpace(json))
-                    {
-                        throw new Exception("Empty response received from server");
-                    }
-
-                    LoginResponse result = JsonConvert.DeserializeObject<LoginResponse>(json);
-
-                    if (result == null)
-                    {
-                        throw new JsonException("Failed to deserialize response");
-                    }
-
-                    return result;
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError("LoginRequestAsync", ex);
-                throw;
+                var result = JsonConvert.DeserializeObject<LoginResponse>(json);
+                return (result, json);
             }
         }
 
-        private async Task HandleLoginResponse(LoginResponse result, string email, string password)
+        private async Task HandleLoginResponse(LoginResponse result, string rawJson, string email, string password)
         {
-            try
+            if (result.responseCode == "00" && result.agent != null)
             {
-                if (result.responseCode == "00" && result.agent != null)
+                _loginAttempts = 0;
+                _lockoutUntil = null;
+
+                bool rememberMe = RememberMeCheckbox.IsChecked;
+                SessionService.IsRememberMe = rememberMe;
+                SessionService.IsRememberPassword = rememberMe;
+                SessionService.SaveSession(email, password, string.Empty, rawJson);
+                await SecureStorageService.SaveCredentialsAsync(email, password, rememberMe);
+
+                ValidUserMail = email;
+                Passwords = result.agent.password ?? string.Empty;
+                Name = result.agent.name ?? "Unknown";
+                Category = result.agent.category;
+                Pin = result.agent.pin ?? string.Empty;
+                Super_Agent = result.agent.SuperAgent ?? string.Empty;
+                CollectionPoint = result.agent.collectionPoint ?? string.Empty;
+                Message = result.message ?? string.Empty;
+                App.IsUserLoggedIn = true;
+
+                SessionManager.Instance.StartSession();
+
+                await ShowSuccessAnimation();
+                await NavigateToAppropriatePageAsync(result.agent);
+            }
+            else
+            {
+                _loginAttempts++;
+                string errorMessage = !string.IsNullOrWhiteSpace(result.message) ? result.message : "Invalid login credentials";
+                int attemptsRemaining = MAX_LOGIN_ATTEMPTS - _loginAttempts;
+
+                if (_loginAttempts >= MAX_LOGIN_ATTEMPTS)
                 {
-                    _loginAttempts = 0;
-                    _lockoutUntil = null;
-
-                    if (string.IsNullOrWhiteSpace(result.agent.category))
-                    {
-                        throw new Exception("Invalid agent category received");
-                    }
-
-                    // Save credentials if Remember Me is checked
-                    bool rememberMe = RememberMeCheckbox.IsChecked;
-                    await SecureStorageService.SaveCredentialsAsync(email, password, rememberMe);
-
-                    ValidUserMail = email;
-                    Passwords = result.agent.password ?? string.Empty;
-                    Name = result.agent.name ?? "Unknown";
-                    Category = result.agent.category;
-                    Pin = result.agent.pin ?? string.Empty;
-                    Super_Agent = result.agent.SuperAgent ?? string.Empty;
-                    CollectionPoint = result.agent.collectionPoint ?? string.Empty;
-                    Message = result.message ?? string.Empty;
-                    App.IsUserLoggedIn = true;
-
-                    // Start session monitoring
-                    SessionManager.Instance.StartSession();
-
-                    await ShowSuccessAnimation();
-
-                    await NavigateToAppropriatePageAsync(result.agent);
+                    _lockoutUntil = DateTime.Now.AddMinutes(LOCKOUT_DURATION_MINUTES);
+                    ShowErrorToast($"Account locked for {LOCKOUT_DURATION_MINUTES} minutes");
+                    await ShakeAnimation(LoginCard);
                 }
                 else
                 {
-                    _loginAttempts++;
-
-                    string errorMessage = !string.IsNullOrWhiteSpace(result.message)
-                        ? result.message
-                        : "Invalid login credentials";
-
-                    int attemptsRemaining = MAX_LOGIN_ATTEMPTS - _loginAttempts;
-
-                    if (_loginAttempts >= MAX_LOGIN_ATTEMPTS)
-                    {
-                        _lockoutUntil = DateTime.Now.AddMinutes(LOCKOUT_DURATION_MINUTES);
-                        ShowErrorToast($"Account locked for {LOCKOUT_DURATION_MINUTES} minutes");
-                        await ShakeAnimation(LoginCard);
-                    }
-                    else
-                    {
-                        ShowErrorToast($"{errorMessage} ({attemptsRemaining} attempts left)");
-                        await ShakeAnimation(LoginCard);
-                    }
+                    ShowErrorToast($"{errorMessage} ({attemptsRemaining} attempts left)");
+                    await ShakeAnimation(LoginCard);
                 }
-            }
-            catch (Exception ex)
-            {
-                LogError("HandleLoginResponse", ex);
-                throw;
             }
         }
 
         private async Task NavigateToAppropriatePageAsync(Agent agent)
         {
-            try
+            Page targetPage = null;
+            string categoryName = agent.category?.ToLower() ?? "";
+
+            if (categoryName == "shop" || categoryName == "market")
             {
-                Page targetPage = null;
-                string agentType = string.Empty;
-
-                switch (agent.category?.ToLower())
-                {
-                    case "default":
-                        targetPage = new Views.Default.Dashboard();
-                        agentType = "Default Agent";
-                        break;
-
-                    case "keke":
-                        targetPage = new Views.Keke.Dashboard();
-                        agentType = "keke Agent";
-                        break;
-
-                    case "business premise":
-                        targetPage = new Views.BizPrem.Dashboard();
-                        agentType = "Business Premises Agent";
-                        break;
-
-                    case "shop":
-                        targetPage = new Views.Market.Dashboard();
-                        agentType = "shop Agent";
-                        break;
-
-                    case "haulage":
-                        targetPage = new Views.Haulage.Dashboard();
-                        agentType = "Haulage Agent";
-                        break;
-
-                    default:
-                        ShowErrorToast($"Unknown agent category: {agent.category}");
-                        return;
-                }
-
-                if (targetPage != null)
-                {
-                    UserDialogs.Instance.Toast(
-                        $"Welcome back, {agent.name}!\nSigned in as {agentType}",
-                        TimeSpan.FromSeconds(3));
-
-                    await Task.Delay(800);
-
-                    Device.BeginInvokeOnMainThread(() =>
-                    {
-                        Application.Current.MainPage = new NavigationPage(targetPage)
-                        {
-                            BarBackgroundColor = Color.FromHex("#004225"),
-                            BarTextColor = Color.White
-                        };
-                    });
-                }
+                targetPage = new Views.Market.Dashboard();
             }
-            catch (Exception ex)
+            else if (categoryName == "keke")
             {
-                LogError("NavigateToAppropriatePageAsync", ex);
-                throw;
+                targetPage = new Views.Keke.Dashboard();
             }
+            else if (categoryName == "business premise")
+            {
+                targetPage = new Views.BizPrem.Dashboard();
+            }
+            else if (categoryName == "haulage")
+            {
+                targetPage = new Views.Haulage.Dashboard();
+            }
+            else
+            {
+                targetPage = new Views.Market.Dashboard();
+            }
+
+            UserDialogs.Instance.Toast($"Welcome back, {agent.name}!\nSigned in successfully.", TimeSpan.FromSeconds(3));
+            await Task.Delay(400);
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                Application.Current.MainPage = new NavigationPage(targetPage)
+                {
+                    BarBackgroundColor = Color.FromHex("#064E3B"),
+                    BarTextColor = Color.White
+                };
+            });
         }
         #endregion
 
-        #region UI Helper Methods
+        #region UI Helpers
         private bool CheckLockoutStatus()
         {
-            try
+            if (_lockoutUntil.HasValue && DateTime.Now < _lockoutUntil.Value)
             {
-                if (_lockoutUntil.HasValue && DateTime.Now < _lockoutUntil.Value)
+                TimeSpan remaining = _lockoutUntil.Value - DateTime.Now;
+                int minutesRemaining = (int)Math.Ceiling(remaining.TotalMinutes);
+
+                Device.BeginInvokeOnMainThread(() =>
                 {
-                    TimeSpan remaining = _lockoutUntil.Value - DateTime.Now;
-                    int minutesRemaining = (int)Math.Ceiling(remaining.TotalMinutes);
+                    SignInButton.IsEnabled = false;
+                    SignInButton.Opacity = 0.5;
+                });
+
+                ShowErrorToast($"Account locked. Try again in {minutesRemaining} minute(s)");
+                return false;
+            }
+            else
+            {
+                if (_lockoutUntil.HasValue)
+                {
+                    _lockoutUntil = null;
+                    _loginAttempts = 0;
 
                     Device.BeginInvokeOnMainThread(() =>
                     {
-                        SignInButton.IsEnabled = false;
-                        SignInButton.Opacity = 0.5;
+                        SignInButton.IsEnabled = true;
+                        SignInButton.Opacity = 1.0;
                     });
-
-                    ShowErrorToast($"Account locked. Try again in {minutesRemaining} minute(s)");
-                    return false;
                 }
-                else
-                {
-                    if (_lockoutUntil.HasValue)
-                    {
-                        _lockoutUntil = null;
-                        _loginAttempts = 0;
-
-                        Device.BeginInvokeOnMainThread(() =>
-                        {
-                            SignInButton.IsEnabled = true;
-                            SignInButton.Opacity = 1.0;
-                        });
-                    }
-
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError("CheckLockoutStatus", ex);
                 return true;
             }
         }
 
         private async Task ShowLoading(bool show, string message = "Loading...", string subtext = "")
         {
-            try
+            await Device.InvokeOnMainThreadAsync(async () =>
             {
-                await Device.InvokeOnMainThreadAsync(async () =>
+                if (show)
                 {
-                    if (show)
-                    {
-                        LoadingText.Text = message;
-                        LoadingSubtext.Text = subtext;
-                        LoadingOverlay.Opacity = 0;
-                        LoadingOverlay.IsVisible = true;
-
-                        await LoadingOverlay.FadeTo(1, 250);
-                        _ = AnimateLoadingSpinner();
-                    }
-                    else
-                    {
-                        await LoadingOverlay.FadeTo(0, 250);
-                        LoadingOverlay.IsVisible = false;
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                LogError("ShowLoading", ex);
-            }
+                    LoadingText.Text = message;
+                    LoadingSubtext.Text = subtext;
+                    LoadingOverlay.Opacity = 0;
+                    LoadingOverlay.IsVisible = true;
+                    await LoadingOverlay.FadeTo(1, 250);
+                    _ = AnimateLoadingSpinner();
+                }
+                else
+                {
+                    await LoadingOverlay.FadeTo(0, 250);
+                    LoadingOverlay.IsVisible = false;
+                }
+            });
         }
 
         private void DisableLoginButton()
@@ -943,76 +653,56 @@ namespace ZamfaraIRS
 
         private async void ShowErrorToast(string message)
         {
-            try
+            await Device.InvokeOnMainThreadAsync(async () =>
             {
-                await Device.InvokeOnMainThreadAsync(async () =>
-                {
-                    ErrorToastMessage.Text = message;
-                    ErrorToast.TranslationY = -100;
-                    ErrorToast.Opacity = 0;
-                    ErrorToast.IsVisible = true;
+                ErrorToastMessage.Text = message;
+                ErrorToast.TranslationY = -100;
+                ErrorToast.Opacity = 0;
+                ErrorToast.IsVisible = true;
 
-                    await Task.WhenAll(
-                        ErrorToast.TranslateTo(0, 0, 300, Easing.SpringOut),
-                        ErrorToast.FadeTo(1, 300)
-                    );
+                await Task.WhenAll(
+                    ErrorToast.TranslateTo(0, 0, 300, Easing.SpringOut),
+                    ErrorToast.FadeTo(1, 300)
+                );
 
-                    await Task.Delay(4000);
-
-                    await HideErrorToast();
-                });
-            }
-            catch (Exception ex)
-            {
-                LogError("ShowErrorToast", ex);
-            }
+                await Task.Delay(4000);
+                await HideErrorToast();
+            });
         }
 
         private async Task HideErrorToast()
         {
-            try
+            await Device.InvokeOnMainThreadAsync(async () =>
             {
-                await Device.InvokeOnMainThreadAsync(async () =>
+                if (ErrorToast.IsVisible)
                 {
-                    if (ErrorToast.IsVisible)
-                    {
-                        await Task.WhenAll(
-                            ErrorToast.TranslateTo(0, -100, 250, Easing.CubicIn),
-                            ErrorToast.FadeTo(0, 250)
-                        );
-                        ErrorToast.IsVisible = false;
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                LogError("HideErrorToast", ex);
-            }
+                    await Task.WhenAll(
+                        ErrorToast.TranslateTo(0, -100, 250, Easing.CubicIn),
+                        ErrorToast.FadeTo(0, 250)
+                    );
+                    ErrorToast.IsVisible = false;
+                }
+            });
         }
 
         private void LogError(string method, Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[ERROR] {method}: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
-
-            // Log inner exceptions for SSL issues
             if (ex.InnerException != null)
-            {
                 System.Diagnostics.Debug.WriteLine($"[INNER ERROR]: {ex.InnerException.Message}");
-            }
         }
         #endregion
     }
 
     #region Response Models
-    internal class LoginResponse
+    public class LoginResponse
     {
         public string responseCode { get; set; }
         public string message { get; set; }
         public Agent agent { get; set; }
     }
 
-    internal class Agent
+    public class Agent
     {
         public string name { get; set; }
         public string password { get; set; }

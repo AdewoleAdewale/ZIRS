@@ -1086,7 +1086,7 @@ namespace ZamfaraIRS.Services
         public string StoreName { get; set; } = "ZAMFARA STATE INTERNAL REVENUE SERVICE";
         public string StoreSubTitle { get; set; }
         public string StoreAddress { get; set; } = "Zamfara State Revenue Service";
-        public string StorePhone { get; set; } = "Contact us: 09070701616,07017639494";
+        public string StorePhone { get; set; } = "Contact us: +234 813 284 9470,+234 806 161 7026";
         public string ReceiptNumber { get; set; } = "N/A";
         public string AgentName { get; set; }
         public string CollectionPoint { get; set; }
@@ -1107,6 +1107,7 @@ namespace ZamfaraIRS.Services
         /// </summary>
         public string BarcodeLabel { get; set; } =
             "https://zamfara.osoftpay.net/singlecollections/verify?TransactId=";
+        public string ReceiptBannerText { get; internal set; }
     }
 
     public sealed class ReceiptItem
