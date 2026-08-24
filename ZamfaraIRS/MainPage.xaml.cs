@@ -27,7 +27,7 @@ namespace ZamfaraIRS
 
         #region Private Fields
         private const int MAX_LOGIN_ATTEMPTS = 5;
-        private const int LOCKOUT_DURATION_MINUTES = 15;
+        private const int LOCKOUT_DURATION_MINUTES = 1;
         private const int REQUEST_TIMEOUT_SECONDS = 30;
         private readonly HttpClient _httpClient;
         private static int _loginAttempts = 0;
@@ -471,7 +471,7 @@ namespace ZamfaraIRS
             string sanitizedEmail = Uri.EscapeDataString(email);
             string sanitizedPassword = Uri.EscapeDataString(password);
 
-            string url = $"https://zamfara.osoftpay.net/api/Taskpayers/v1/AgentLogin?UserName={sanitizedEmail}&Password={sanitizedPassword}";
+            string url = $"https://zamfara.osoftpay.net/api/Taskpayers/v2/AgentLogin?UserName={sanitizedEmail}&Password={sanitizedPassword}";
 
             using (var response = await _httpClient.GetAsync(url, cancellationToken))
             {
