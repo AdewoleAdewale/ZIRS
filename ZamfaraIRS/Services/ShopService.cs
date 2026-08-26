@@ -1,12 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text.Json;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 using ZamfaraIRS.Models;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace ZamfaraIRS.Services
 {
@@ -20,18 +18,21 @@ namespace ZamfaraIRS.Services
         Task<ShopVerificationModel> VerifyShopAsync(string shopNo, int mktId);
         Task<List<ShopPaymentHistoryModel>> GetShopPaymentsAsync(string shopNo, string dateFrom = null, string dateTo = null);
         Task<string> CalculateAmountOwedAsync(string shopNo, int months);
-        Task<ShopRepaymentVerificationModel> VerifyShopRepayAsync(string v1, int id, string v2);
-        Task<ShopNoVerificationModel> VerifyShopNoAsync(string v1, string v2);
+        Task<ShopRepaymentVerificationModel> VerifyShopRepayAsync(string shopNo, int mktId, string occupant);
+        Task<ShopNoVerificationModel> VerifyShopNoAsync(string shopNo, string occupant);
+        Task<List<ShopItemModel>> GetShopListAsync(int mktId, string agentEmail);
     }
 
     public class ShopService : IShopService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "https://yobe.osoftpay.net/";
+        private readonly string _baseUrl = "https://zamfara.osoftpay.net/";
 
-        public ShopService(HttpClient httpClient)
+        public ShopService(HttpClient httpClient = null)
         {
-            _httpClient = httpClient ?? new HttpClient();
+            // Use SslHandler insecure client if none or plain client is passed
+            _httpClient = httpClient ?? SslHandler.GetInsecureHttpClient();
+
             if (_httpClient.BaseAddress == null)
             {
                 _httpClient.BaseAddress = new Uri(_baseUrl);
@@ -40,19 +41,14 @@ namespace ZamfaraIRS.Services
 
         public async Task<ApiResponse> RegisterMarketAsync(string email, string marketPlaza, string mktCode)
         {
-            var content = new MultipartFormDataContent();
-            try
+            using (var content = new MultipartFormDataContent())
             {
                 content.Add(new StringContent(marketPlaza ?? string.Empty), "Market_Plaza");
                 content.Add(new StringContent(mktCode ?? string.Empty), "MktCode");
 
                 var response = await _httpClient.PostAsync($"api/Shops/{Uri.EscapeDataString(email)}/NewMarket", content);
                 var json = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<ApiResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            }
-            finally
-            {
-                content.Dispose();
+                return JsonConvert.DeserializeObject<ApiResponse>(json);
             }
         }
 
@@ -65,7 +61,7 @@ namespace ZamfaraIRS.Services
             if (!response.IsSuccessStatusCode) return new List<MarketModel>();
 
             var json = await response.Content.ReadAsStringAsync();
-            var list = JsonSerializer.Deserialize<List<MarketModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var list = JsonConvert.DeserializeObject<List<MarketModel>>(json);
 
             if (list != null && list.Count == 1 && string.Equals(list[0].Market_Plaza, "Wrong Agent email", StringComparison.OrdinalIgnoreCase))
             {
@@ -83,7 +79,7 @@ namespace ZamfaraIRS.Services
             if (!response.IsSuccessStatusCode) return new List<ShopCategoryModel>();
 
             var json = await response.Content.ReadAsStringAsync();
-            var list = JsonSerializer.Deserialize<List<ShopCategoryModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var list = JsonConvert.DeserializeObject<List<ShopCategoryModel>>(json);
 
             if (list != null && list.Count == 1 && string.Equals(list[0].ShopCategoryName, "Wrong Agent email", StringComparison.OrdinalIgnoreCase))
             {
@@ -98,13 +94,12 @@ namespace ZamfaraIRS.Services
             if (!response.IsSuccessStatusCode) return new List<ShopItemModel>();
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<ShopItemModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<ShopItemModel>();
+            return JsonConvert.DeserializeObject<List<ShopItemModel>>(json) ?? new List<ShopItemModel>();
         }
 
         public async Task<ApiResponse> EnumerateShopAsync(string recordedBy, int marketId, string shopCat, string shopNo)
         {
-            var content = new MultipartFormDataContent();
-            try
+            using (var content = new MultipartFormDataContent())
             {
                 content.Add(new StringContent(recordedBy ?? string.Empty), "RecordedBy");
                 content.Add(new StringContent(marketId.ToString()), "MarketId");
@@ -113,11 +108,7 @@ namespace ZamfaraIRS.Services
 
                 var response = await _httpClient.PostAsync("api/Shops/shopenumeration/AddNew", content);
                 var json = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<ApiResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            }
-            finally
-            {
-                content.Dispose();
+                return JsonConvert.DeserializeObject<ApiResponse>(json);
             }
         }
 
@@ -127,7 +118,7 @@ namespace ZamfaraIRS.Services
             if (!response.IsSuccessStatusCode) return null;
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<ShopVerificationModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return JsonConvert.DeserializeObject<ShopVerificationModel>(json);
         }
 
         public async Task<List<ShopPaymentHistoryModel>> GetShopPaymentsAsync(string shopNo, string dateFrom = null, string dateTo = null)
@@ -142,7 +133,7 @@ namespace ZamfaraIRS.Services
             if (!response.IsSuccessStatusCode) return new List<ShopPaymentHistoryModel>();
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<ShopPaymentHistoryModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<ShopPaymentHistoryModel>();
+            return JsonConvert.DeserializeObject<List<ShopPaymentHistoryModel>>(json) ?? new List<ShopPaymentHistoryModel>();
         }
 
         public async Task<string> CalculateAmountOwedAsync(string shopNo, int months)
@@ -151,10 +142,27 @@ namespace ZamfaraIRS.Services
             if (!response.IsSuccessStatusCode) return "0.00";
 
             var json = await response.Content.ReadAsStringAsync();
-            var res = JsonSerializer.Deserialize<MonthCalculationModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var res = JsonConvert.DeserializeObject<MonthCalculationModel>(json);
             return res?.TotalAmt ?? "0.00";
         }
 
+        public async Task<ShopRepaymentVerificationModel> VerifyShopRepayAsync(string shopNo, int mktId, string occupant)
+        {
+            var response = await _httpClient.GetAsync($"api/Shops/VerifyShopRePay?ShopNo={Uri.EscapeDataString(shopNo)}&MktId={mktId}&Occupant={Uri.EscapeDataString(occupant)}");
+            if (!response.IsSuccessStatusCode) return null;
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<ShopRepaymentVerificationModel>(json);
+        }
+
+        public async Task<ShopNoVerificationModel> VerifyShopNoAsync(string shopNo, string occupant)
+        {
+            var response = await _httpClient.GetAsync($"api/Shops/VerifyShopNo?ShopNo={Uri.EscapeDataString(shopNo)}&Occupant={Uri.EscapeDataString(occupant)}");
+            if (!response.IsSuccessStatusCode) return null;
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<ShopNoVerificationModel>(json);
+        }
 
         public async Task<List<ShopItemModel>> GetShopListAsync(int mktId, string agentEmail)
         {
@@ -165,38 +173,7 @@ namespace ZamfaraIRS.Services
             if (!response.IsSuccessStatusCode) return new List<ShopItemModel>();
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<ShopItemModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<ShopItemModel>();
-        }
-
-        public async Task<ShopRepaymentVerificationModel> VerifyShopRepayAsync(string shopNo, int mktId, string occupant)
-        {
-            var response = await _httpClient.GetAsync($"api/Shops/VerifyShopRePay?ShopNo={Uri.EscapeDataString(shopNo)}&MktId={mktId}&Occupant={Uri.EscapeDataString(occupant)}");
-            if (!response.IsSuccessStatusCode) return null;
-
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<ShopRepaymentVerificationModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        }
-
-        public async Task<ShopNoVerificationModel> VerifyShopNoAsync(string shopNo, string occupant)
-        {
-            var response = await _httpClient.GetAsync($"api/Shops/VerifyShopNo?ShopNo={Uri.EscapeDataString(shopNo)}&Occupant={Uri.EscapeDataString(occupant)}");
-            if (!response.IsSuccessStatusCode) return null;
-
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<ShopNoVerificationModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        }
-        public async Task<bool> UpdateMarketAsync(int id, MarketModel market)
-        {
-            var json = JsonSerializer.Serialize(market);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-            var response = await _httpClient.PutAsync($"api/Shops/{id}", content);
-            return response.IsSuccessStatusCode;
-        }
-
-        public async Task<bool> DeleteMarketAsync(int id)
-        {
-            var response = await _httpClient.DeleteAsync($"api/Shops/{id}");
-            return response.IsSuccessStatusCode;
+            return JsonConvert.DeserializeObject<List<ShopItemModel>>(json) ?? new List<ShopItemModel>();
         }
     }
 }

@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
 using System.Net.Security;
-using System.Text;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ZamfaraIRS.Services
 {
@@ -11,29 +11,57 @@ namespace ZamfaraIRS.Services
     {
         public static void ConfigureSSL()
         {
-            // ============ CHANGE: Add this to handle SSL certificates ============
-            ServicePointManager.ServerCertificateValidationCallback =
-                (sender, certificate, chain, sslPolicyErrors) =>
-                {
-                    if (sslPolicyErrors == SslPolicyErrors.None)
-                    {
-                        return true; // Certificate is valid
-                    }
+            try
+            {
+                // Enable TLS 1.2 and TLS 1.1 protocols
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 |
+                                                       SecurityProtocolType.Tls11 |
+                                                       SecurityProtocolType.Tls;
 
-                    // Log certificate errors
-                    Debug.WriteLine($"[SSL VALIDATION] Error: {sslPolicyErrors}");
-                    Debug.WriteLine($"[SSL CERT] Subject: {certificate?.Subject}");
-                    Debug.WriteLine($"[SSL CERT] Issuer: {certificate?.Issuer}");
+                // Trust all SSL certificates globally for legacy HttpWebRequest / WebClient
+                ServicePointManager.ServerCertificateValidationCallback = ValidateServerCertificate;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SSL Configuration Error]: {ex.Message}");
+            }
+        }
 
-                    // Return true to accept the certificate
-                    // NOTE: For production, implement certificate pinning instead
-                    return true;
-                };
+        private static bool ValidateServerCertificate(
+            object sender,
+            X509Certificate certificate,
+            X509Chain chain,
+            SslPolicyErrors sslPolicyErrors)
+        {
+            // Bypass all SSL certificate chain / hostname validation errors
+            return true;
+        }
 
-            // ============ CHANGE: Update TLS version ============
-            ServicePointManager.SecurityProtocol =
-                SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-            // ============ End TLS version update ============
+        /// <summary>
+        /// Provides an HttpClientHandler configured to bypass SSL certificate validation.
+        /// </summary>
+        public static HttpClientHandler GetInsecureHandler()
+        {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
+                SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls
+            };
+
+            return handler;
+        }
+
+        /// <summary>
+        /// Returns a pre-configured HttpClient that ignores SSL certificate validation.
+        /// </summary>
+        public static HttpClient GetInsecureHttpClient(TimeSpan? timeout = null)
+        {
+            var client = new HttpClient(GetInsecureHandler())
+            {
+                Timeout = timeout ?? TimeSpan.FromSeconds(30)
+            };
+
+            return client;
         }
     }
 }

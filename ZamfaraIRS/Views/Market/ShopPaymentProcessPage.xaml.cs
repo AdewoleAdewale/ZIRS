@@ -50,7 +50,7 @@ namespace ZamfaraIRS.Views.Market
         public ShopPaymentProcessPage()
         {
             InitializeComponent();
-            _shopService = new ShopService(new System.Net.Http.HttpClient());
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             BindingContext = this;
 
             VerifyAndCalculateCommand = new Command(async () => await ExecuteVerify());

@@ -27,7 +27,7 @@ namespace ZamfaraIRS.Views.Market
         public ShopRepaymentPaymentPage()
         {
             InitializeComponent();
-            _shopService = new ShopService(new System.Net.Http.HttpClient());
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             MarketPicker.ItemsSource = Markets;
             InitializeSheet();
         }

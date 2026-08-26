@@ -29,7 +29,7 @@ namespace ZamfaraIRS.Views.Market
         public RegisterMarketPage()
         {
             InitializeComponent();
-            _shopService = new ShopService(new System.Net.Http.HttpClient());
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             BindingContext = this;
             RegisterCommand = new Command(async () => await ExecuteRegister());
         }

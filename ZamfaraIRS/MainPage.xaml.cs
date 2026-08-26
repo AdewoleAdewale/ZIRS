@@ -44,19 +44,10 @@ namespace ZamfaraIRS
             {
                 InitializeComponent();
 
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
-                    SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
-                                   System.Security.Authentication.SslProtocols.Tls11
-                };
+                ZamfaraIRS.Services.SslHandler.ConfigureSSL();
 
-                _httpClient = new HttpClient(handler)
-                {
-                    Timeout = TimeSpan.FromSeconds(REQUEST_TIMEOUT_SECONDS)
-                };
-
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
+                // 2. Initialize HttpClient with SSL bypass handler
+                _httpClient = ZamfaraIRS.Services.SslHandler.GetInsecureHttpClient(TimeSpan.FromSeconds(REQUEST_TIMEOUT_SECONDS));
 
                 CheckLockoutStatus();
             }
@@ -471,7 +462,8 @@ namespace ZamfaraIRS
             string sanitizedEmail = Uri.EscapeDataString(email);
             string sanitizedPassword = Uri.EscapeDataString(password);
 
-            string url = $"https://zamfara.osoftpay.net/api/Taskpayers/v2/AgentLogin?UserName={sanitizedEmail}&Password={sanitizedPassword}";
+            // Updated from /v1/ to /v2/ to match your live working endpoint
+            string url = $"https://zamfara.osoftpay.net/api/TaskPayers/v2/AgentLogin?UserName={sanitizedEmail}&Password={sanitizedPassword}";
 
             using (var response = await _httpClient.GetAsync(url, cancellationToken))
             {

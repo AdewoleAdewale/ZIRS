@@ -44,7 +44,7 @@ namespace ZamfaraIRS.Views.Market
         public VerifyShopPage()
         {
             InitializeComponent();
-            _shopService = new ShopService(new System.Net.Http.HttpClient());
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             BindingContext = this;
             VerifyCommand = new Command(async () => await ExecuteVerify());
         }

@@ -8,15 +8,15 @@
 
         <!-- Header Profile & Logout -->
         <Grid Grid.Row="0" Padding="20, 40, 20, 10" ColumnDefinitions="Auto, *, Auto, Auto">
-            <Frame Grid.Column="0" CornerRadius="16" HeightRequest="32" WidthRequest="32" BackgroundColor="#047857" Padding="0" HasShadow="False">
-                <Label Text="PU" TextColor="White" VerticalOptions="Center" HorizontalOptions="Center" FontAttributes="Bold" />
+            <Frame Grid.Column="0" CornerRadius="6" HeightRequest="32" WidthRequest="32" BackgroundColor="White" Padding="0" HasShadow="False">
+                <Image Source="zirs" VerticalOptions="Center" HorizontalOptions="Center" Aspect="AspectFit" Margin="5"  />
             </Frame>
             <StackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
                 <Label Text="Good afternoon" FontSize="11" TextColor="#A7F3D0" />
                 <Label Text="{Binding AgentName}" FontSize="15" FontAttributes="Bold" TextColor="White" />
             </StackLayout>
             <Button Grid.Column="2" Text="⋯" BackgroundColor="#047857" TextColor="White" CornerRadius="12" WidthRequest="40" HeightRequest="40" Command="{Binding OpenOptionsCommand}" />
-            <Button Grid.Column="3" Text="⏻" Margin="6,0,0,0" BackgroundColor="#DC2626" TextColor="White" CornerRadius="12" WidthRequest="40" HeightRequest="40" Command="{Binding LogoutCommand}" />
+            <Button Grid.Column="3"  ImageSource="shutdown" Margin="6,0,0,0" BackgroundColor="#DC2626"   TextColor="White" CornerRadius="12" WidthRequest="40" HeightRequest="40" Command="{Binding LogoutCommand}" />
         </Grid>
 
         <!-- Current Office / LGA Card -->
@@ -51,7 +51,7 @@
                 </Frame>
                 <Frame Grid.Column="2" CornerRadius="12" BackgroundColor="#047857" Padding="10" HasShadow="False">
                     <StackLayout>
-                        <Label Text="₦1,350" FontSize="16" FontAttributes="Bold" TextColor="White" />
+                        <Label Text="₦" FontSize="16" FontAttributes="Bold" TextColor="White" />
                         <Label Text="Last 7 days" FontSize="10" TextColor="#D1FAE5" />
                     </StackLayout>
                 </Frame>
@@ -97,7 +97,7 @@
                             </Frame.GestureRecognizers>
                             <StackLayout HorizontalOptions="Center" Spacing="6">
                                 <Frame CornerRadius="10" BackgroundColor="#D1FAE5" HeightRequest="36" WidthRequest="36" Padding="0" HasShadow="False">
-                                    <Label Text="S" TextColor="#065F46" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Image Source="check" Margin="1" HeightRequest="30"   HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Frame>
                                 <Label Text="Shops" FontSize="11" FontAttributes="Bold" TextColor="#374151" HorizontalOptions="Center" />
                             </StackLayout>
@@ -110,7 +110,7 @@
                             </Frame.GestureRecognizers>
                             <StackLayout HorizontalOptions="Center" Spacing="6">
                                 <Frame CornerRadius="10" BackgroundColor="#DBEAFE" HeightRequest="36" WidthRequest="36" Padding="0" HasShadow="False">
-                                    <Label Text="H" TextColor="#1E40AF" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Image Source="yobehistory" Margin="1" HeightRequest="30"   HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Frame>
                                 <Label Text="History" FontSize="11" FontAttributes="Bold" TextColor="#374151" HorizontalOptions="Center" />
                             </StackLayout>
@@ -123,7 +123,7 @@
                             </Frame.GestureRecognizers>
                             <StackLayout HorizontalOptions="Center" Spacing="6">
                                 <Frame CornerRadius="10" BackgroundColor="#FFEDD5" HeightRequest="36" WidthRequest="36" Padding="0" HasShadow="False">
-                                    <Label Text="T" TextColor="#9A3412" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Image Source="print" Margin="1" HeightRequest="30"   HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Frame>
                                 <Label Text="Test print" FontSize="11" FontAttributes="Bold" TextColor="#374151" HorizontalOptions="Center" />
                             </StackLayout>
@@ -136,7 +136,7 @@
                             </Frame.GestureRecognizers>
                             <StackLayout HorizontalOptions="Center" Spacing="6">
                                 <Frame CornerRadius="10" BackgroundColor="#EDE9FE" HeightRequest="36" WidthRequest="36" Padding="0" HasShadow="False">
-                                    <Label Text="⚙" TextColor="#5B21B6" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Image Source="add" Margin="1" HeightRequest="30"   HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Frame>
                                 <Label Text="Settings" FontSize="11" FontAttributes="Bold" TextColor="#374151" HorizontalOptions="Center" />
                             </StackLayout>
@@ -156,7 +156,7 @@
                                     <Frame CornerRadius="12" BackgroundColor="White" Padding="12" HasShadow="False">
                                         <Grid ColumnDefinitions="Auto, *, Auto">
                                             <Frame CornerRadius="8" BackgroundColor="#E0F2FE" HeightRequest="32" WidthRequest="32" Padding="0" HasShadow="False">
-                                                <Label Text="SH" TextColor="#0369A1" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" FontSize="11" />
+                                                <Image Source="zirs" HorizontalOptions="Center" VerticalOptions="Center" Aspect="AspectFit" HeightRequest="30" />
                                             </Frame>
                                             <StackLayout Grid.Column="1" Margin="10,0,0,0">
                                                 <Label Text="{Binding ShopNo}" FontAttributes="Bold" FontSize="13" TextColor="#1F2937" />
@@ -191,8 +191,8 @@
                         <StackLayout.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding NavExploreCommand}" />
                         </StackLayout.GestureRecognizers>
-                        <Label Text="🔍" FontSize="18" TextColor="#9CA3AF" HorizontalOptions="Center" />
-                        <Label Text="Explore" FontSize="10" TextColor="#9CA3AF" HorizontalOptions="Center" />
+                        <Label Text="🔍" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" />
+                        <Label Text="Explore" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" />
                     </StackLayout>
 
                     <!-- Spacer for FAB (Column 2) -->
@@ -201,16 +201,16 @@
                         <StackLayout.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding NavHistoryCommand}" />
                         </StackLayout.GestureRecognizers>
-                        <Label Text="◷" FontSize="18" TextColor="#9CA3AF" HorizontalOptions="Center" />
-                        <Label Text="History" FontSize="10" TextColor="#9CA3AF" HorizontalOptions="Center" />
+                        <Label Text="◷" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" />
+                        <Label Text="History" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" />
                     </StackLayout>
 
                     <StackLayout Grid.Column="4" VerticalOptions="Center" HorizontalOptions="Center">
                         <StackLayout.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding OpenOptionsCommand}" />
                         </StackLayout.GestureRecognizers>
-                        <Label Text="👤" FontSize="18" TextColor="#9CA3AF" HorizontalOptions="Center" />
-                        <Label Text="Profile" FontSize="10" TextColor="#9CA3AF" HorizontalOptions="Center" />
+                        <Label Text="👤" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" />
+                        <Label Text="Profile" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" />
                     </StackLayout>
                 </Grid>
             </Frame>
@@ -220,7 +220,7 @@
                     TextColor="White" 
                     FontSize="28" 
                     FontAttributes="Bold" 
-                    BackgroundColor="#4F46E5" 
+                    BackgroundColor="#064E3B" 
                     WidthRequest="56" 
                     HeightRequest="56" 
                     CornerRadius="28" 

@@ -53,7 +53,7 @@ namespace ZamfaraIRS.Views.Market
         public EnumerateShopPage()
         {
             InitializeComponent();
-            _shopService = new ShopService(new System.Net.Http.HttpClient());
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             BindingContext = this;
             EnumerateCommand = new Command(async () => await ExecuteEnumerate());
         }

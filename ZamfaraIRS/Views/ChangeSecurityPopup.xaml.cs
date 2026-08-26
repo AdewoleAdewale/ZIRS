@@ -30,7 +30,7 @@ namespace ZamfaraIRS.Views
         public ChangeSecurityPopup(string email, bool isPinMode)
         {
             InitializeComponent();
-            _accountService = new AccountService(new System.Net.Http.HttpClient());
+            _accountService = new AccountService(SslHandler.GetInsecureHttpClient());
             _email = email;
             _isPinMode = isPinMode;
             BindingContext = this;

@@ -43,11 +43,11 @@ namespace ZamfaraIRS.Views.Market
     public Dashboard()
     {
         InitializeComponent();
-        _shopService = new ShopService(new System.Net.Http.HttpClient());
-        _printService = new ReceiptPrintService();
-        BindingContext = this;
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
+            _printService = new ReceiptPrintService();
+            BindingContext = this;
 
-        NavNewPaymentCommand = new Command(async () => await Navigation.PushAsync(new ShopPaymentProcessPage()));
+            NavNewPaymentCommand = new Command(async () => await Navigation.PushAsync(new ShopPaymentProcessPage()));
         NavEnumerateCommand = new Command(async () => await Navigation.PushAsync(new EnumerateShopPage()));
         NavHistoryCommand = new Command(async () => await Navigation.PushAsync(new ShopPaymentHistoryPage()));
         NavExploreCommand = new Command(async () => await Navigation.PushAsync(new MarketShopsPage()));

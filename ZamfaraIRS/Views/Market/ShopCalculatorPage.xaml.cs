@@ -33,7 +33,7 @@ namespace ZamfaraIRS.Views.Market
         public ShopCalculatorPage()
         {
             InitializeComponent();
-            _shopService = new ShopService(new System.Net.Http.HttpClient());
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             BindingContext = this;
             CalculateCommand = new Command(async () => await ExecuteCalculate());
         }

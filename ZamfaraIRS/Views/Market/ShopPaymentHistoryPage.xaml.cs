@@ -31,7 +31,7 @@ namespace ZamfaraIRS.Views.Market
         public ShopPaymentHistoryPage()
         {
             InitializeComponent();
-            _shopService = new ShopService(new System.Net.Http.HttpClient());
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             BindingContext = this;
             LoadHistoryCommand = new Command(async () => await ExecuteLoadHistory());
         }
