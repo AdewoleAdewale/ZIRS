@@ -24,7 +24,7 @@
 
             <Button Text="Save &amp; Register Shop" 
                     Command="{Binding EnumerateCommand}" 
-                    BackgroundColor="#2E7D32" 
+                    BackgroundColor="#064E3B" 
                     TextColor="White" 
                     CornerRadius="8" />
         </StackLayout>

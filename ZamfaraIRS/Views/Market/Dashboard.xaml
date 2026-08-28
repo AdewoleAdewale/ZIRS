@@ -59,7 +59,7 @@
         </StackLayout>
 
         <!-- Main Workspace (Light Background Sheet) -->
-        <Frame Grid.Row="3" BackgroundColor="#F3F4F6" CornerRadius="24" Margin="0, 10, 0, 0" Padding="16, 20, 16, 0" HasShadow="False">
+        <Frame Grid.Row="3" BackgroundColor="#F3F4F6" CornerRadius="15" Margin="0, 10, 0, 0" Padding="16, 20, 16, 0" HasShadow="False">
             <ScrollView VerticalScrollBarVisibility="Never">
                 <StackLayout Spacing="16">
 
@@ -76,7 +76,7 @@
                     <!-- Big Action: New Payment -->
                     <Frame CornerRadius="14" BackgroundColor="#064E3B" Padding="16" HasShadow="False">
                         <Frame.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding NavNewPaymentCommand}" />
+                            <TapGestureRecognizer Tapped="OnNewPaymentTapped" NumberOfTapsRequired="1" />
                         </Frame.GestureRecognizers>
                         <Grid ColumnDefinitions="*, Auto">
                             <StackLayout>
@@ -93,7 +93,7 @@
                         <!-- Register Shop -->
                         <Frame Grid.Column="0" CornerRadius="14" BackgroundColor="White" Padding="8" HasShadow="False">
                             <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding NavEnumerateCommand}" />
+                                <TapGestureRecognizer Tapped="OnEnumerateTapped" NumberOfTapsRequired="1" />
                             </Frame.GestureRecognizers>
                             <StackLayout HorizontalOptions="Center" Spacing="6">
                                 <Frame CornerRadius="10" BackgroundColor="#D1FAE5" HeightRequest="36" WidthRequest="36" Padding="0" HasShadow="False">
@@ -106,7 +106,7 @@
                         <!-- History -->
                         <Frame Grid.Column="1" CornerRadius="14" BackgroundColor="White" Padding="8" HasShadow="False">
                             <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding NavHistoryCommand}" />
+                                <TapGestureRecognizer Tapped="OnHistoryTapped" NumberOfTapsRequired="1" />
                             </Frame.GestureRecognizers>
                             <StackLayout HorizontalOptions="Center" Spacing="6">
                                 <Frame CornerRadius="10" BackgroundColor="#DBEAFE" HeightRequest="36" WidthRequest="36" Padding="0" HasShadow="False">
@@ -119,7 +119,7 @@
                         <!-- Test Print -->
                         <Frame Grid.Column="2" CornerRadius="14" BackgroundColor="White" Padding="8" HasShadow="False">
                             <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding TestPrintCommand}" />
+                                <TapGestureRecognizer Tapped="OnTestPrintTapped" NumberOfTapsRequired="1" />
                             </Frame.GestureRecognizers>
                             <StackLayout HorizontalOptions="Center" Spacing="6">
                                 <Frame CornerRadius="10" BackgroundColor="#FFEDD5" HeightRequest="36" WidthRequest="36" Padding="0" HasShadow="False">
@@ -132,7 +132,7 @@
                         <!-- Security / Settings -->
                         <Frame Grid.Column="3" CornerRadius="14" BackgroundColor="White" Padding="8" HasShadow="False">
                             <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding OpenOptionsCommand}" />
+                                <TapGestureRecognizer Tapped="OnSettingsTapped" NumberOfTapsRequired="1" />
                             </Frame.GestureRecognizers>
                             <StackLayout HorizontalOptions="Center" Spacing="6">
                                 <Frame CornerRadius="10" BackgroundColor="#EDE9FE" HeightRequest="36" WidthRequest="36" Padding="0" HasShadow="False">
@@ -179,7 +179,6 @@
 
         <!-- Center-FAB Bottom Navigation Bar -->
         <Grid Grid.Row="4" HeightRequest="70" BackgroundColor="Transparent">
-            <!-- White Bar Background with Top Rounded Corners -->
             <Frame BackgroundColor="White" CornerRadius="20" Margin="0" Padding="20,0" HasShadow="True">
                 <Grid ColumnDefinitions="*, *, 60, *, *">
                     <StackLayout Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Center">
@@ -189,28 +188,26 @@
 
                     <StackLayout Grid.Column="1" VerticalOptions="Center" HorizontalOptions="Center">
                         <StackLayout.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding NavExploreCommand}" />
+                            <TapGestureRecognizer Tapped="OnExploreTapped" NumberOfTapsRequired="1" />
                         </StackLayout.GestureRecognizers>
-                        <Label Text="🔍" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" />
-                        <Label Text="Explore" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" />
+                        <Label Text="🔍" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" InputTransparent="True" />
+                        <Label Text="Explore" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" InputTransparent="True" />
                     </StackLayout>
-
-                    <!-- Spacer for FAB (Column 2) -->
 
                     <StackLayout Grid.Column="3" VerticalOptions="Center" HorizontalOptions="Center">
                         <StackLayout.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding NavHistoryCommand}" />
+                            <TapGestureRecognizer Tapped="OnHistoryTapped" NumberOfTapsRequired="1" />
                         </StackLayout.GestureRecognizers>
-                        <Label Text="◷" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" />
-                        <Label Text="History" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" />
+                        <Label Text="◷" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" InputTransparent="True" />
+                        <Label Text="History" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" InputTransparent="True" />
                     </StackLayout>
 
                     <StackLayout Grid.Column="4" VerticalOptions="Center" HorizontalOptions="Center">
                         <StackLayout.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding OpenOptionsCommand}" />
+                            <TapGestureRecognizer Tapped="OnSettingsTapped" NumberOfTapsRequired="1" />
                         </StackLayout.GestureRecognizers>
-                        <Label Text="👤" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" />
-                        <Label Text="Profile" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" />
+                        <Label Text="👤" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center" InputTransparent="True" />
+                        <Label Text="Profile" FontSize="10" TextColor="#064E3B" HorizontalOptions="Center" InputTransparent="True" />
                     </StackLayout>
                 </Grid>
             </Frame>
@@ -227,7 +224,7 @@
                     HorizontalOptions="Center" 
                     VerticalOptions="Start" 
                     Margin="0,-20,0,0" 
-                    Command="{Binding CenterFabActionCommand}" />
+                    Clicked="OnCenterFabClicked" />
         </Grid>
     </Grid>
 </ContentPage>

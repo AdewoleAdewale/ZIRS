@@ -7,7 +7,7 @@
         <Label Text="Enter Shop Number" />
         <Entry Text="{Binding ShopNo}" Placeholder="e.g. GCM014" />
 
-        <Button Text="Load Recent Payments" Command="{Binding LoadHistoryCommand}" BackgroundColor="#005A9C" TextColor="White" />
+        <Button Text="Load Recent Payments" Command="{Binding LoadHistoryCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="10" />
 
         <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
 

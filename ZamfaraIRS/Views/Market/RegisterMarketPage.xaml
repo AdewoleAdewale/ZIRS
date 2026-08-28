@@ -17,7 +17,7 @@
 
         <Button Text="Submit Registration" 
                     Command="{Binding RegisterCommand}" 
-                    BackgroundColor="#005A9C" 
+                    BackgroundColor="#064E3B" 
                     TextColor="White" 
                     CornerRadius="8" />
     </StackLayout>

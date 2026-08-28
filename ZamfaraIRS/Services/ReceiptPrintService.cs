@@ -33,7 +33,6 @@ namespace ZamfaraIRS.Services
             builder.AppendLine($"Device Status: OK");
             builder.AppendLine($"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             builder.AppendLine("\n\n\n");
-
             await SendToPrinterDeviceAsync(Encoding.ASCII.GetBytes(builder.ToString()));
         }
 
