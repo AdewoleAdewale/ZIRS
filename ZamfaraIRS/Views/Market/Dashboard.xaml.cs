@@ -179,5 +179,16 @@ namespace ZamfaraIRS.Views.Market
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private async void Button_Clicked(object sender, EventArgs e)
+        {
+            bool exit = await DisplayAlert("Logout", "Do you want to log out?", "Yes", "No");
+            if (exit)
+            {
+                await SessionManager.Instance.LogoutAsync();
+            }
+        }
+
+     
     }
 }

@@ -15,8 +15,8 @@
                 <Label Text="Good afternoon" FontSize="11" TextColor="#A7F3D0" />
                 <Label Text="{Binding AgentName}" FontSize="15" FontAttributes="Bold" TextColor="White" />
             </StackLayout>
-            <Button Grid.Column="2" Text="⋯" BackgroundColor="#047857" TextColor="White" CornerRadius="12" WidthRequest="40" HeightRequest="40" Command="{Binding OpenOptionsCommand}" />
-            <Button Grid.Column="3"  ImageSource="shutdown" Margin="6,0,0,0" BackgroundColor="#DC2626"   TextColor="White" CornerRadius="12" WidthRequest="40" HeightRequest="40" Command="{Binding LogoutCommand}" />
+            <Button Grid.Column="2" Text="⋯" BackgroundColor="#047857" TextColor="White" CornerRadius="12" WidthRequest="40" HeightRequest="40"  />
+            <Button Grid.Column="3"  ImageSource="shutdown" Margin="6,0,0,0" BackgroundColor="#DC2626"   TextColor="White" CornerRadius="12" WidthRequest="40" HeightRequest="40" Clicked="Button_Clicked" />
         </Grid>
 
         <!-- Current Office / LGA Card -->

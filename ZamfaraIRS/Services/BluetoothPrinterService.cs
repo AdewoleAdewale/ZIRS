@@ -203,16 +203,17 @@ namespace ZamfaraIRS.Services
         #region ── Supported Printer Names ────────────────────────────────────
 
         private static readonly HashSet<string> SupportedPrinters =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
+             new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+             {
                 "RRN2OP",
                 "MPT-II", "MTP-II_89EB", "MTP-II-6111",
                 "RPP02N", "RPP210",
                 "MP300", "IposPrinter", "FP8800", "S60",
                 "InnerPrinter", "Internal Bluetooth Printer",
                 "printer001", "b906", "ANDROID BT", "CS10",
-                "Q2i"
-            };
+                "Q2i",
+                "MP-58T" // Added the new MP-58T Thermal Printer
+             };
 
         #endregion
 
