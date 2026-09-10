@@ -30,13 +30,20 @@ namespace ZamfaraIRS.Services
 
         public ShopService(HttpClient httpClient = null)
         {
-            // Use SslHandler insecure client if none or plain client is passed
             _httpClient = httpClient ?? SslHandler.GetInsecureHttpClient();
 
             if (_httpClient.BaseAddress == null)
             {
                 _httpClient.BaseAddress = new Uri(_baseUrl);
             }
+        }
+
+        // Helper to grab the securely saved email from the current session
+        private string GetActiveAgentEmail()
+        {
+            return !string.IsNullOrEmpty(MainPage.ValidUserMail)
+                ? MainPage.ValidUserMail
+                : SessionService.SavedEmail;
         }
 
         public async Task<ApiResponse> RegisterMarketAsync(string email, string marketPlaza, string mktCode)
@@ -46,7 +53,9 @@ namespace ZamfaraIRS.Services
                 content.Add(new StringContent(marketPlaza ?? string.Empty), "Market_Plaza");
                 content.Add(new StringContent(mktCode ?? string.Empty), "MktCode");
 
-                var response = await _httpClient.PostAsync($"api/Shops/{Uri.EscapeDataString(email)}/NewMarket", content);
+                // Intercept and use session email
+                string activeEmail = GetActiveAgentEmail();
+                var response = await _httpClient.PostAsync($"api/Shops/{Uri.EscapeDataString(activeEmail)}/NewMarket", content);
                 var json = await response.Content.ReadAsStringAsync();
                 return JsonConvert.DeserializeObject<ApiResponse>(json);
             }
@@ -55,7 +64,7 @@ namespace ZamfaraIRS.Services
         public async Task<List<MarketModel>> GetMarketsAsync(string agentEmail)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "api/Shops/GetMarket");
-            request.Headers.Add("Agent", agentEmail);
+            request.Headers.Add("Agent", GetActiveAgentEmail());
 
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode) return new List<MarketModel>();
@@ -73,7 +82,7 @@ namespace ZamfaraIRS.Services
         public async Task<List<ShopCategoryModel>> GetShopCategoriesAsync(int mktId, string agentEmail)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"api/Shops/{mktId}/GetShopCat");
-            request.Headers.Add("Agent", agentEmail);
+            request.Headers.Add("Agent", GetActiveAgentEmail());
 
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode) return new List<ShopCategoryModel>();
@@ -101,7 +110,8 @@ namespace ZamfaraIRS.Services
         {
             using (var content = new MultipartFormDataContent())
             {
-                content.Add(new StringContent(recordedBy ?? string.Empty), "RecordedBy");
+                // Intercept and use session email for recordedBy
+                content.Add(new StringContent(GetActiveAgentEmail()), "RecordedBy");
                 content.Add(new StringContent(marketId.ToString()), "MarketId");
                 content.Add(new StringContent(shopCat ?? string.Empty), "ShopCat");
                 content.Add(new StringContent(shopNo ?? string.Empty), "ShopNo");
@@ -167,7 +177,7 @@ namespace ZamfaraIRS.Services
         public async Task<List<ShopItemModel>> GetShopListAsync(int mktId, string agentEmail)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"api/Shops/{mktId}/GetshopList");
-            request.Headers.Add("Agent", agentEmail);
+            request.Headers.Add("Agent", GetActiveAgentEmail());
 
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode) return new List<ShopItemModel>();
