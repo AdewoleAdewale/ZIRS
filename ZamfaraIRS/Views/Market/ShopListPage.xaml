@@ -10,11 +10,11 @@
         <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" TextColor="#D1FAE5" FontSize="10" HorizontalOptions="Center" Margin="0,0,0,15"/>
 
         <!-- Main Body Sheet -->
-        <Frame CornerRadius="24" BackgroundColor="#F9FAFB" Padding="15" HasShadow="False" VerticalOptions="FillAndExpand">
+        <Frame CornerRadius="14" BackgroundColor="#F9FAFB" Padding="15" HasShadow="False" VerticalOptions="FillAndExpand">
             <StackLayout Spacing="10">
 
                 <!-- Market Name Header -->
-                <Frame CornerRadius="20" BackgroundColor="White" Padding="12" HasShadow="False" BorderColor="#E5E7EB">
+                <Frame CornerRadius="10" BackgroundColor="White" Padding="12" HasShadow="False" BorderColor="#E5E7EB">
                     <Label Text="{Binding SelectedMarket.Market_Plaza}" FontAttributes="Bold" FontSize="15" HorizontalOptions="Center" TextColor="#064E3B" />
                 </Frame>
 

@@ -1,15 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="ZamfaraIRS.Views.MarketsPage"
-             Title="MARKETS"
+             x:Class="ZamfaraIRS.Views.Market.MarketsPage"
              BackgroundColor="#064E3B">
 
     <StackLayout Spacing="0">
         <Label Text="MARKETS" TextColor="White" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,15,0,2"/>
         <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" TextColor="#D1FAE5" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,0,0,15"/>
 
-        <Frame CornerRadius="24" BackgroundColor="#F9FAFB" Padding="15" HasShadow="False" VerticalOptions="FillAndExpand">
+        <Frame CornerRadius="14" BackgroundColor="#F9FAFB" Padding="15" HasShadow="False" VerticalOptions="FillAndExpand">
             <StackLayout Spacing="15">
                 <Label Text="{Binding Markets.Count, StringFormat='| {0} Markets Under Your LGA'}" FontSize="12" FontAttributes="Bold" TextColor="#064E3B" />
                 <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />

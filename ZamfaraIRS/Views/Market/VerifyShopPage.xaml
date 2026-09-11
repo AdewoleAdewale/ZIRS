@@ -2,12 +2,11 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ZamfaraIRS.Views.Market.VerifyShopPage"
-            Title="VERIFY SHOP"
-             BackgroundColor="#064E3B">
+             BackgroundColor="White">
 
     <StackLayout Spacing="0">
-        <Label Text="VERIFY SHOP" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,15,0,2"/>
-        <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" TextColor="#D1FAE5" FontSize="10" HorizontalOptions="Center" Margin="0,0,0,15"/>
+        <Label Text="VERIFY SHOP" TextColor="#064E3B" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,15,0,2"/>
+        <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" TextColor="#064E3B" FontSize="10" HorizontalOptions="Center" Margin="0,0,0,15"/>
 
         <ScrollView BackgroundColor="#F9FAFB">
             <StackLayout Padding="20" Spacing="15">

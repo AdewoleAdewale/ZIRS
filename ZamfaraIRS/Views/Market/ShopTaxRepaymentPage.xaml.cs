@@ -6,7 +6,7 @@ using Xamarin.Forms.Xaml;
 using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
 
-namespace ZamfaraIRS.Views
+namespace ZamfaraIRS.Views.Market
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class ShopTaxRepaymentPage : ContentPage, INotifyPropertyChanged
@@ -17,6 +17,8 @@ namespace ZamfaraIRS.Views
         private string _paymentReference;
         private string _amountToPay;
         private string _transactionPin;
+        private ShopRepaymentVerificationModel verifiedRepay;
+        private readonly IShopService _shopService;
 
         public ShopRepaymentVerificationModel ShopData
         {
@@ -54,7 +56,7 @@ namespace ZamfaraIRS.Views
             set { _transactionPin = value; OnPropertyChanged(); }
         }
 
-        public ShopTaxRepaymentPage(ShopRepaymentVerificationModel verificationData)
+        public ShopTaxRepaymentPage(ShopRepaymentVerificationModel verificationData, IShopService shopService)
         {
             InitializeComponent();
             ShopData = verificationData;
@@ -64,6 +66,13 @@ namespace ZamfaraIRS.Views
             AmountToPay = cleanedOwed;
             PaymentReference = $"REF-{DateTime.Now:yyyyMMddHHmmss}";
             BindingContext = this;
+
+            _shopService = shopService ?? throw new ArgumentNullException(nameof(shopService));
+        }
+
+        public ShopTaxRepaymentPage(ShopRepaymentVerificationModel verifiedRepay)
+        {
+            this.verifiedRepay = verifiedRepay;
         }
 
         private void OnSelectChannelTapped(object sender, EventArgs e) => IsPopupVisible = true;
@@ -78,57 +87,90 @@ namespace ZamfaraIRS.Views
             }
         }
 
-        private async void OnMakePaymentClicked(object sender, EventArgs e)
+        private  void OnMakePaymentClicked(object sender, EventArgs e)
         {
             SessionManager.Instance.UpdateActivity();
+            ExecutePayment();
 
+
+        }
+
+        private async void ExecutePayment()
+        {
             if (SelectedPaymentChannel == "Select Payment Channel")
             {
-                await DisplayAlert("Validation", "Please select a payment channel (Remita or PayZamfara).", "OK");
+                await DisplayAlert("Validation", "Please select a valid payment channel.", "OK");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(AmountToPay) || string.IsNullOrWhiteSpace(TransactionPin))
             {
-                await DisplayAlert("Validation", "Amount to pay and 4-digit PIN are required.", "OK");
+                await DisplayAlert("Validation", "Amount and PIN are required.", "OK");
                 return;
             }
 
-            if (!string.IsNullOrEmpty(MainPage.Pin) && TransactionPin != MainPage.Pin)
-            {
-                await DisplayAlert("Security", "Incorrect Agent PIN. Please try again.", "OK");
-                return;
-            }
+            // Grab the active session email
+            string agentEmail = ZamfaraIRS.MainPage.ValidUserMail ?? ZamfaraIRS.Services.SessionService.SavedEmail ?? "agent@example.com";
+
+            // Show loading
+            Acr.UserDialogs.UserDialogs.Instance.ShowLoading("Processing Payment...");
 
             try
             {
                 decimal.TryParse(AmountToPay, out decimal amount);
-                decimal.TryParse(ShopData.AmountOwed?.Replace("₦", string.Empty).Replace(",", string.Empty), out decimal balanceRemaining);
-                balanceRemaining = Math.Max(0, balanceRemaining - amount);
+                int.TryParse(ShopData.MktId ?? "0", out int marketId);
 
-                await DisplayAlert("Processing", $"Processing {SelectedPaymentChannel} collection of ₦{amount:N2} for shop {ShopData.ShopNo}...", "OK");
-
-                // Execute official thermal printing[cite: 2, 4]
-                await ShopReceiptPrinter.PrintPaymentReceiptAsync(
+                // 1. Submit to API
+                var response = await _shopService.SubmitShopRepaymentAsync(
+                    agentEmail,
                     ShopData.ShopNo,
-                    ShopData.Market,
+                    marketId,
+                    ShopData.ShopCategory,
                     ShopData.Owner,
                     amount,
-                    balanceRemaining,
+                    TransactionPin,
                     PaymentReference,
-                    DateTime.Now.ToString("dd-MMM-yyyy HH:mm"),
-                    isReprint: false
+                    SelectedPaymentChannel
                 );
 
-                await DisplayAlert("Success", "Payment processed and receipt printed successfully!", "Done");
-                await Navigation.PopToRootAsync();
+                Acr.UserDialogs.UserDialogs.Instance.HideLoading();
+
+                // 2. Validate Response (Only "00" is successful)[cite: 5]
+                if (response != null && response.RespondCode == "00")
+                {
+                    decimal.TryParse(response.Bal, out decimal remainingBalance);
+                    string transactionRef = response.TransactionNo ?? PaymentReference;
+
+                    await DisplayAlert("Success", "Payment processed successfully!", "OK");
+
+                    // 3. Print the Shop specific receipt
+                    await ShopReceiptPrinter.PrintShopPaymentReceiptAsync(
+                        transactionRef,
+                        ShopData.ShopNo,
+                        ShopData.Market,
+                        ShopData.Owner,
+                        ShopData.ShopCategory,
+                        amount,
+                        remainingBalance,
+                        agentEmail,
+                        isReprint: false
+                    );
+
+                    await Navigation.PopToRootAsync();
+                }
+                else
+                {
+                    // API returned a failure code (e.g. 01, 06, 09)[cite: 5]
+                    string errorMsg = response?.Message ?? response?.ResponseMessage ?? "Transaction failed.";
+                    await DisplayAlert("Payment Error", errorMsg, "OK");
+                }
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Payment failed: {ex.Message}", "OK");
+                Acr.UserDialogs.UserDialogs.Instance.HideLoading();
+                await DisplayAlert("Network Error", $"Failed to connect: {ex.Message}", "OK");
             }
         }
-
         public new event PropertyChangedEventHandler PropertyChanged;
         protected new void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

@@ -21,6 +21,7 @@ namespace ZamfaraIRS.Services
         Task<ShopRepaymentVerificationModel> VerifyShopRepayAsync(string shopNo, int mktId, string occupant);
         Task<ShopNoVerificationModel> VerifyShopNoAsync(string shopNo, string occupant);
         Task<List<ShopItemModel>> GetShopListAsync(int mktId, string agentEmail);
+        Task<RepaymentResponseModel> SubmitShopRepaymentAsync(string email, string shopNo, int marketId, string shopCat, string occupant, decimal amount, string pin, string payRef, string paymentChannel);
     }
 
     public class ShopService : IShopService
@@ -184,6 +185,34 @@ namespace ZamfaraIRS.Services
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<List<ShopItemModel>>(json) ?? new List<ShopItemModel>();
+        }
+
+  
+
+        public async Task<RepaymentResponseModel> SubmitShopRepaymentAsync(
+            string email, string shopNo, int marketId, string shopCat,
+            string occupant, decimal amount, string pin, string payRef, string paymentChannel)
+        {
+            using (var content = new MultipartFormDataContent())
+            {
+                content.Add(new StringContent(email ?? string.Empty), "Email");
+                content.Add(new StringContent(shopNo ?? string.Empty), "ShopNo");
+                content.Add(new StringContent(marketId.ToString()), "MarketId");
+                content.Add(new StringContent(shopCat ?? string.Empty), "ShopCat");
+                content.Add(new StringContent(occupant ?? string.Empty), "Occupant");
+                content.Add(new StringContent(amount.ToString()), "Amount");
+                content.Add(new StringContent(pin ?? string.Empty), "Pin");
+
+                if (!string.IsNullOrEmpty(payRef))
+                    content.Add(new StringContent(payRef), "PayRef");
+
+                if (!string.IsNullOrEmpty(paymentChannel) && paymentChannel != "Select Payment Channel")
+                    content.Add(new StringContent(paymentChannel), "PaymentChannel");
+
+                var response = await _httpClient.PostAsync("api/SingleCollections/V1/ShopRepay", content);
+                var json = await response.Content.ReadAsStringAsync();
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<RepaymentResponseModel>(json);
+            }
         }
     }
 }

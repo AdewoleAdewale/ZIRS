@@ -3,6 +3,21 @@ using System.Text.Json.Serialization;
 
 namespace ZamfaraIRS.Models
 {
+
+    public class RepaymentResponseModel
+    {
+        [Newtonsoft.Json.JsonProperty("message")]
+        public string Message { get; set; }
+        [Newtonsoft.Json.JsonProperty("responseMessage")]
+        public string ResponseMessage { get; set; }
+        [Newtonsoft.Json.JsonProperty("respondCode")]
+        public string RespondCode { get; set; }
+        [Newtonsoft.Json.JsonProperty("transactionNo")]
+        public string TransactionNo { get; set; }
+        [Newtonsoft.Json.JsonProperty("bal")]
+        public string Bal { get; set; }
+    }
+
     public class MarketModel
     {
         [JsonPropertyName("id")]

@@ -7,7 +7,7 @@ using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
 using ZamfaraIRS.Views.Market;
 
-namespace ZamfaraIRS.Views
+namespace ZamfaraIRS.Views.Market
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class VerifyShopPage : ContentPage, INotifyPropertyChanged

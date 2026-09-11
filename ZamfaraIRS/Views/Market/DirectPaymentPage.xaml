@@ -2,13 +2,12 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ZamfaraIRS.Views.Market.DirectPaymentPage"
-             Title="DIRECT PAYMENT"
              BackgroundColor="#064E3B">
 
     <StackLayout Spacing="0">
         <Grid ColumnDefinitions="*, Auto" Padding="20,10">
             <Label Grid.Column="0" Text="DIRECT PAYMENT" TextColor="White" FontSize="18" FontAttributes="Bold" VerticalOptions="Center"/>
-            <Image Grid.Column="1" Source="payment_illustration.png" HeightRequest="60" WidthRequest="60" VerticalOptions="Center" />
+            <Image Grid.Column="1" Source="zirs.png" HeightRequest="60" WidthRequest="60" VerticalOptions="Center" />
         </Grid>
 
         <Frame CornerRadius="24" BackgroundColor="#F9FAFB" Padding="20" HasShadow="False" VerticalOptions="FillAndExpand">

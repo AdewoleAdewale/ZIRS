@@ -2,66 +2,33 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xamarin.Forms;
+using ZamfaraIRS.Models; // Assuming ReceiptData and ReceiptItem are here
 
 namespace ZamfaraIRS.Services
 {
     public interface IReceiptPrintService
     {
         Task PrintTestReceiptAsync();
-        Task PrintPaymentReceiptAsync(string shopNo, string marketName, string occupant, decimal amount, string transactionRef, string date);
         Task PrintRegistrationReceiptAsync(string businessName, string payerId, string marketName, string agentEmail);
+
+        // Dedicated Shop Print
+        Task<bool> PrintShopReceiptAsync(string shopNo, string marketName, string occupant, decimal amountPaid, decimal balanceRemaining, string transactionRef, string date, string agentEmail, bool isReprint = false);
+
+        // Dedicated Keke Print
+        Task<bool> PrintKekeReceiptAsync(string transactionNo, string vehiclePlateNo, string serviceName, decimal amountPaid, string lga, string agentEmail, bool isReprint = false);
     }
 
     public class ReceiptPrintService : IReceiptPrintService
     {
-        // Helper to resolve the main Printer Service
         private IPrinterService GetPrinter()
         {
-            // Resolves the IPrinterService (implemented by BluetoothPrinterService)
-            // If not registered in DI, you can instantiate it directly: new BluetoothPrinterService(use80mm: false);
             return DependencyService.Get<IPrinterService>() ?? new BluetoothPrinterService(use80mm: false);
-        }
-
-        public async Task PrintPaymentReceiptAsync(string shopNo, string marketName, string occupant, decimal amount, string transactionRef, string date)
-        {
-            var printer = GetPrinter();
-            if (printer == null) return;
-
-            // Map your parameters to the existing ReceiptData model
-            var receipt = new ReceiptData
-            {
-                StoreName = "ZAMFARA STATE INTERNAL REVENUE SERVICE",
-                StoreSubTitle = "OFFICIAL PAYMENT RECEIPT",
-                ReceiptNumber = transactionRef,
-                CollectionPoint = marketName,
-                PrintDate = DateTime.TryParse(date, out var parsedDate) ? parsedDate : DateTime.Now,
-                AmountPaid = amount,
-                TotalAmount = amount,
-
-                Items = new List<ReceiptItem>
-                {
-                    new ReceiptItem { Description = "SHOP NO", SubText = shopNo, Amount = 0 },
-                    new ReceiptItem { Description = "OCCUPANT", SubText = occupant, Amount = 0 },
-                    new ReceiptItem { Description = "AMOUNT PAID", Amount = amount }
-                },
-
-                BarcodeLabel = $"https://zamfara.osoftpay.net/api/SingleCollections/v1/VerifyPayment?TransactId={transactionRef}",
-                FooterLine1 = "APPROVED SUCCESSFUL",
-                FooterLine2 = "POWERED BY OSOFTPAY"
-            };
-
-            // Send to BluetoothPrinterService
-            // Note: pass null for logoAssetName if you don't have a logo embedded in the project
-            await printer.PrintReceiptAsync(receipt, logoAssetName: null);
         }
 
         public async Task PrintTestReceiptAsync()
         {
             var printer = GetPrinter();
-            if (printer == null) return;
-
-            // Utilizes the built-in test page functionality of your BluetoothPrinterService
-            await printer.PrintTestPageAsync();
+            if (printer != null) await printer.PrintTestPageAsync();
         }
 
         public async Task PrintRegistrationReceiptAsync(string businessName, string payerId, string marketName, string agentEmail)
@@ -77,7 +44,6 @@ namespace ZamfaraIRS.Services
                 CollectionPoint = marketName,
                 AgentName = agentEmail,
                 PrintDate = DateTime.Now,
-
                 Items = new List<ReceiptItem>
                 {
                     new ReceiptItem { Description = "BUSINESS NAME", SubText = businessName, Amount = 0 },
@@ -88,6 +54,68 @@ namespace ZamfaraIRS.Services
             };
 
             await printer.PrintReceiptAsync(receipt, logoAssetName: null);
+        }
+
+        // --- SHOP PAYMENT RECEIPT ---
+        public async Task<bool> PrintShopReceiptAsync(string shopNo, string marketName, string occupant, decimal amountPaid, decimal balanceRemaining, string transactionRef, string date, string agentEmail, bool isReprint = false)
+        {
+            var printer = GetPrinter();
+            if (printer == null) return false;
+
+            var receipt = new ReceiptData
+            {
+                StoreName = "ZAMFARA STATE INTERNAL REVENUE SERVICE",
+                StoreSubTitle = isReprint ? "SHOP REPAYMENT (REPRINT)" : "OFFICIAL REPAYMENT RECEIPT",
+                ReceiptNumber = transactionRef,
+                AgentName = agentEmail,
+                CollectionPoint = marketName,
+                PrintDate = DateTime.TryParse(date, out var parsedDate) ? parsedDate : DateTime.Now,
+                AmountPaid = amountPaid,
+                TotalAmount = amountPaid + balanceRemaining,
+                AmountLeft = balanceRemaining,
+                Items = new List<ReceiptItem>
+                {
+                    new ReceiptItem { Description = "SHOP NO", SubText = shopNo, Amount = 0 },
+                    new ReceiptItem { Description = "OCCUPANT NAME", SubText = occupant, Amount = 0 },
+                    new ReceiptItem { Description = "AMOUNT PAID", Amount = amountPaid }
+                },
+                BarcodeLabel = $"https://zamfara.osoftpay.net/verify?ref={transactionRef}",
+                FooterLine1 = isReprint ? "*** REPRINTED RECEIPT ***" : "Status: APPROVED SUCCESSFUL",
+                FooterLine2 = isReprint ? $"Reprinted: {DateTime.Now:dd MMM yyyy HH:mm}" : "POWERED BY OSOFTPAY"
+            };
+
+            await printer.PrintReceiptAsync(receipt, logoAssetName: null);
+            return true;
+        }
+
+        // --- KEKE PAYMENT RECEIPT ---
+        public async Task<bool> PrintKekeReceiptAsync(string transactionNo, string vehiclePlateNo, string serviceName, decimal amountPaid, string lga, string agentEmail, bool isReprint = false)
+        {
+            var printer = GetPrinter();
+            if (printer == null) return false;
+
+            var receipt = new ReceiptData
+            {
+                StoreName = "ZAMFARA STATE INTERNAL REVENUE SERVICE",
+                StoreSubTitle = isReprint ? "KEKE PERMIT (REPRINT)" : "KEKE / TRICYCLE TICKET",
+                ReceiptNumber = transactionNo,
+                AgentName = agentEmail,
+                CollectionPoint = lga,
+                PrintDate = DateTime.Now,
+                AmountPaid = amountPaid,
+                TotalAmount = amountPaid,
+                Items = new List<ReceiptItem>
+                {
+                    new ReceiptItem { Description = serviceName, Amount = amountPaid },
+                    new ReceiptItem { Description = "Vehicle Plate No", SubText = vehiclePlateNo, Amount = 0 }
+                },
+                BarcodeLabel = $"https://zamfara.osoftpay.net/verify?ref={transactionNo}",
+                FooterLine1 = isReprint ? "*** REPRINTED RECEIPT ***" : "Status: APPROVED SUCCESSFUL",
+                FooterLine2 = "POWERED BY OSOFTPAY"
+            };
+
+            await printer.PrintReceiptAsync(receipt, logoAssetName: null);
+            return true;
         }
     }
 }

@@ -7,7 +7,7 @@ using Xamarin.Forms;
 using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
 
-namespace ZamfaraIRS.Views
+namespace ZamfaraIRS.Views.Market
 {
     public partial class MarketsPage : ContentPage, INotifyPropertyChanged
     {

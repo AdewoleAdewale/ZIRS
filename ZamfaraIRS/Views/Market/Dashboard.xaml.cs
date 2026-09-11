@@ -7,6 +7,7 @@ using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
+using ZamfaraIRS.Views; // Added to access the updated Views
 
 namespace ZamfaraIRS.Views.Market
 {
@@ -29,9 +30,10 @@ namespace ZamfaraIRS.Views.Market
         {
             InitializeComponent();
             _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
-            _printService = new ReceiptPrintService();
 
-            // Populate agent identity from active session
+            // Note: Instantiate your actual receipt print service here if you are injecting it differently
+            // _printService = new ReceiptPrintService(); 
+
             if (!string.IsNullOrEmpty(MainPage.Name))
                 AgentName = MainPage.Name;
 
@@ -106,7 +108,8 @@ namespace ZamfaraIRS.Views.Market
 
         private async void OnNewPaymentTapped(object sender, EventArgs e)
         {
-            await SafeNavigateAsync(new ShopRepaymentPaymentPage());
+            // Replaced ShopRepaymentPaymentPage with the new VerifyShopPage
+            await SafeNavigateAsync(new VerifyShopPage());
         }
 
         private async void OnEnumerateTapped(object sender, EventArgs e)
@@ -121,7 +124,8 @@ namespace ZamfaraIRS.Views.Market
 
         private async void OnExploreTapped(object sender, EventArgs e)
         {
-            await SafeNavigateAsync(new MarketShopsPage());
+            // Replaced MarketShopsPage with the new MarketsPage
+            await SafeNavigateAsync(new MarketsPage());
         }
 
         private async void OnTestPrintTapped(object sender, EventArgs e)
@@ -160,7 +164,7 @@ namespace ZamfaraIRS.Views.Market
             else if (action == "Enumerate Shop")
                 await SafeNavigateAsync(new EnumerateShopPage());
             else if (action == "Collect Repayment")
-                await SafeNavigateAsync(new ShopRepaymentPaymentPage());
+                await SafeNavigateAsync(new VerifyShopPage()); // Routes to VerifyShopPage first
         }
 
         private async void OnLogoutClicked(object sender, EventArgs e)
@@ -188,7 +192,5 @@ namespace ZamfaraIRS.Views.Market
                 await SessionManager.Instance.LogoutAsync();
             }
         }
-
-     
     }
 }

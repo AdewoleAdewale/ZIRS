@@ -7,9 +7,8 @@ using Xamarin.Forms.Xaml;
 using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
 using ZamfaraIRS.Views.Market;
-using ZIRS.Views;
 
-namespace ZamfaraIRS.Views
+namespace ZamfaraIRS.Views.Market
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class ShopDetailsPage : ContentPage, INotifyPropertyChanged
