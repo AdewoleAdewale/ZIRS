@@ -1,11 +1,8 @@
-﻿using Acr.UserDialogs;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System;
 using System.Linq;
-using System.Text;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-
+using Acr.UserDialogs;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using ZamfaraIRS.Models;
@@ -19,11 +16,13 @@ namespace ZamfaraIRS.Views.Market
         private readonly IShopService _shopService;
         private ShopRepaymentVerificationModel _verifiedShop;
         private MarketModel _selectedMarket;
+        private ShopItemModel _prefilledShopData;
         private string _lastGeneratedRef;
         private bool _isProcessing;
 
         public ObservableCollection<MarketModel> Markets { get; set; } = new ObservableCollection<MarketModel>();
 
+        // Default constructor for manual entry
         public ShopRepaymentPaymentPage()
         {
             InitializeComponent();
@@ -32,26 +31,61 @@ namespace ZamfaraIRS.Views.Market
             InitializeSheet();
         }
 
+        // Overloaded constructor when navigated from Shop Details
+        public ShopRepaymentPaymentPage(ShopItemModel shopData) : this()
+        {
+            _prefilledShopData = shopData;
+        }
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-           // SessionService.EnsureSessionRestored();
+            SessionService.EnsureSessionRestored();
+            SessionManager.Instance.UpdateActivity();
+
             await LoadMarketsAsync();
+
+            // Auto-fill and verify if data was passed in
+            if (_prefilledShopData != null)
+            {
+                AutoPopulateAndVerify(_prefilledShopData);
+                _prefilledShopData = null; // Clear to prevent re-running if navigating back
+            }
         }
 
         private async void InitializeSheet()
         {
-            this.Opacity = 0;
-            await this.FadeTo(1, 200);
+            this.Opacity = 1; // Ensures the page is visible
+            SheetFrame.TranslationY = 600;
             await SheetFrame.TranslateTo(0, 0, 300, Easing.SpringOut);
         }
 
         private async Task LoadMarketsAsync()
         {
             Markets.Clear();
-            string email = MainPage.ValidUserMail ?? "agent@example.com"; 
+            string email = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
             var list = await _shopService.GetMarketsAsync(email);
             foreach (var m in list) Markets.Add(m);
+        }
+
+        private void AutoPopulateAndVerify(ShopItemModel shopData)
+        {
+            txtShopNo.Text = shopData.ShopNo;
+            txtOccupant.Text = shopData.CurrentOccupant;
+
+            // Auto-match Market
+            var matchedMarket = Markets.FirstOrDefault(m => m.Id == shopData.MarketId || m.Market_Plaza == shopData.MarketName);
+            if (matchedMarket != null)
+            {
+                MarketPicker.SelectedItem = matchedMarket;
+                _selectedMarket = matchedMarket;
+            }
+
+            // Auto-trigger verification
+            if (_selectedMarket != null && !string.IsNullOrWhiteSpace(txtShopNo.Text) && !string.IsNullOrWhiteSpace(txtOccupant.Text))
+            {
+                OnVerifyShopClicked(null, null);
+            }
         }
 
         private void OnMarketSelected(object sender, EventArgs e)
@@ -67,6 +101,8 @@ namespace ZamfaraIRS.Views.Market
 
         private async void OnVerifyShopClicked(object sender, EventArgs e)
         {
+            SessionManager.Instance.UpdateActivity();
+
             if (_selectedMarket == null || string.IsNullOrWhiteSpace(txtShopNo.Text) || string.IsNullOrWhiteSpace(txtOccupant.Text))
             {
                 UserDialogs.Instance.Alert("Please select a market and supply both the shop number and occupant name.", "Validation", "OK");
@@ -100,6 +136,7 @@ namespace ZamfaraIRS.Views.Market
 
         private async void OnMonthsChanged(object sender, TextChangedEventArgs e)
         {
+            SessionManager.Instance.UpdateActivity();
             await RecalculateTotalAsync();
         }
 
@@ -122,10 +159,12 @@ namespace ZamfaraIRS.Views.Market
 
         private async void OnSubmitPaymentClicked(object sender, EventArgs e)
         {
+            SessionManager.Instance.UpdateActivity();
+
             if (_isProcessing) return;
 
             string pin = txtPin.Text?.Trim();
-            if (pin != MainPage.Pin) 
+            if (pin != MainPage.Pin)
             {
                 UserDialogs.Instance.Alert("Invalid Agent Security PIN.", "Security Error", "OK");
                 return;
@@ -136,13 +175,11 @@ namespace ZamfaraIRS.Views.Market
             {
                 try
                 {
-                    // Generate unique reference and simulated transaction
                     _lastGeneratedRef = $"SHP-RP-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
                     decimal.TryParse(txtPayAmount.Text, out decimal amtPaid);
 
                     await Task.Delay(800); // Server persistence hook
 
-                    // Success presentation
                     PaymentFormView.IsVisible = false;
                     lblSuccessRef.Text = _lastGeneratedRef;
                     lblSuccessShopNo.Text = txtShopNo.Text.Trim();
@@ -151,17 +188,7 @@ namespace ZamfaraIRS.Views.Market
                     PaymentSuccessView.IsVisible = true;
 
                     // Trigger primary thermal receipt print
-                    await ShopReceiptPrinter.PrintShopPaymentReceiptAsync(
-                        _lastGeneratedRef,
-                        txtShopNo.Text.Trim(),
-                        _selectedMarket.Market_Plaza,
-                        txtOccupant.Text.Trim(),
-                        _verifiedShop?.ShopCategory ?? "Standard Shop",
-                        amtPaid,
-                        0.00m,
-                        MainPage.ValidUserMail ?? "agent@example.com", 
-                        isReprint: false
-                    );
+                    await ExecutePrintReceipt(isReprint: false);
                 }
                 catch (Exception ex)
                 {
@@ -176,18 +203,26 @@ namespace ZamfaraIRS.Views.Market
 
         private async void OnReprintReceiptClicked(object sender, EventArgs e)
         {
+            await ExecutePrintReceipt(isReprint: true);
+        }
+
+        // Unified print helper pulling the agent email directly from the session
+        private async Task ExecutePrintReceipt(bool isReprint)
+        {
+            SessionManager.Instance.UpdateActivity();
             decimal.TryParse(txtPayAmount.Text, out decimal amtPaid);
+            string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
 
             await ShopReceiptPrinter.PrintShopPaymentReceiptAsync(
                 _lastGeneratedRef,
                 txtShopNo.Text.Trim(),
-                _selectedMarket.Market_Plaza,
+                _selectedMarket?.Market_Plaza ?? "Market",
                 txtOccupant.Text.Trim(),
                 _verifiedShop?.ShopCategory ?? "Standard Shop",
                 amtPaid,
                 0.00m,
-                MainPage.ValidUserMail ?? "agent@example.com",
-                isReprint: true
+                agentEmail,
+                isReprint: isReprint
             );
         }
 
@@ -197,7 +232,7 @@ namespace ZamfaraIRS.Views.Market
 
         private async Task DismissSheet()
         {
-            await SheetFrame.TranslateTo(0, 500, 200, Easing.CubicIn);
+            await SheetFrame.TranslateTo(0, 600, 200, Easing.CubicIn);
             if (Navigation.ModalStack.Count > 0)
                 await Navigation.PopModalAsync();
             else

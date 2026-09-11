@@ -22,6 +22,7 @@ namespace ZamfaraIRS.Services
         Task<ShopNoVerificationModel> VerifyShopNoAsync(string shopNo, string occupant);
         Task<List<ShopItemModel>> GetShopListAsync(int mktId, string agentEmail);
         Task<RepaymentResponseModel> SubmitShopRepaymentAsync(string email, string shopNo, int marketId, string shopCat, string occupant, decimal amount, string pin, string payRef, string paymentChannel);
+        Task<RepaymentResponseModel> SubmitGeneralCollectionAsync(string email, string serviceName, decimal amount, string payer, string pin, string merchantNo);
     }
 
     public class ShopService : IShopService
@@ -187,11 +188,7 @@ namespace ZamfaraIRS.Services
             return JsonConvert.DeserializeObject<List<ShopItemModel>>(json) ?? new List<ShopItemModel>();
         }
 
-  
-
-        public async Task<RepaymentResponseModel> SubmitShopRepaymentAsync(
-            string email, string shopNo, int marketId, string shopCat,
-            string occupant, decimal amount, string pin, string payRef, string paymentChannel)
+        public async Task<RepaymentResponseModel> SubmitShopRepaymentAsync(string email, string shopNo, int marketId, string shopCat, string occupant, decimal amount, string pin, string payRef, string paymentChannel)
         {
             using (var content = new MultipartFormDataContent())
             {
@@ -206,7 +203,7 @@ namespace ZamfaraIRS.Services
                 if (!string.IsNullOrEmpty(payRef))
                     content.Add(new StringContent(payRef), "PayRef");
 
-                if (!string.IsNullOrEmpty(paymentChannel) && paymentChannel != "Select Payment Channel")
+                if (!string.IsNullOrEmpty(paymentChannel))
                     content.Add(new StringContent(paymentChannel), "PaymentChannel");
 
                 var response = await _httpClient.PostAsync("api/SingleCollections/V1/ShopRepay", content);
@@ -214,5 +211,24 @@ namespace ZamfaraIRS.Services
                 return Newtonsoft.Json.JsonConvert.DeserializeObject<RepaymentResponseModel>(json);
             }
         }
+
+        public async Task<RepaymentResponseModel> SubmitGeneralCollectionAsync(string email, string serviceName, decimal amount, string payer, string pin, string merchantNo)
+        {
+            using (var content = new MultipartFormDataContent())
+            {
+                content.Add(new StringContent(email ?? string.Empty), "Email");
+                content.Add(new StringContent(serviceName ?? string.Empty), "ServiceName");
+                content.Add(new StringContent(amount.ToString()), "Amount");
+                content.Add(new StringContent(payer ?? string.Empty), "Payer");
+                content.Add(new StringContent(pin ?? string.Empty), "Pin");
+                content.Add(new StringContent(merchantNo ?? string.Empty), "MerchantNo");
+
+                var response = await _httpClient.PostAsync("api/SingleCollections/v1/NewCollectnew", content);
+                var json = await response.Content.ReadAsStringAsync();
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<RepaymentResponseModel>(json);
+            }
+        }
+
+      
     }
 }
