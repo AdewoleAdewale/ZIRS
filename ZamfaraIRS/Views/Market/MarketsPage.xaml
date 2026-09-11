@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.MarketsPage"
+             Title="MARKETS"
+             BackgroundColor="#064E3B">
+
+    <StackLayout Spacing="0">
+        <Label Text="MARKETS" TextColor="White" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,15,0,2"/>
+        <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" TextColor="#D1FAE5" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,0,0,15"/>
+
+        <Frame CornerRadius="24" BackgroundColor="#F9FAFB" Padding="15" HasShadow="False" VerticalOptions="FillAndExpand">
+            <StackLayout Spacing="15">
+                <Label Text="{Binding Markets.Count, StringFormat='| {0} Markets Under Your LGA'}" FontSize="12" FontAttributes="Bold" TextColor="#064E3B" />
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />
+
+                <CollectionView ItemsSource="{Binding Markets}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,6" CornerRadius="12" BorderColor="#E5E7EB" BackgroundColor="White" HasShadow="False" Padding="15">
+                                <StackLayout Spacing="10">
+                                    <StackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnMarketCardTapped" CommandParameter="{Binding .}" />
+                                    </StackLayout.GestureRecognizers>
+
+                                    <Grid ColumnDefinitions="45, *" RowSpacing="5">
+                                        <StackLayout Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Center">
+                                            <Label Text="▼" FontSize="18" TextColor="#064E3B" HorizontalOptions="Center"/>
+                                            <Label Text="ZIRS" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#064E3B"/>
+                                        </StackLayout>
+
+                                        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="70, *">
+                                            <Label Grid.Row="0" Grid.Column="0" Text="NAME" FontSize="11" TextColor="Gray" FontAttributes="Bold"/>
+                                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Market_Plaza}" FontSize="12" FontAttributes="Bold" TextColor="#111827" />
+
+                                            <Label Grid.Row="1" Grid.Column="0" Text="LGA" FontSize="11" TextColor="Gray" FontAttributes="Bold"/>
+                                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Lga}" FontSize="12" FontAttributes="Bold" TextColor="#DC2626" />
+
+                                            <Label Grid.Row="2" Grid.Column="0" Text="ADDRESS" FontSize="11" TextColor="Gray" FontAttributes="Bold"/>
+                                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding Market_Plaza}" FontSize="12" FontAttributes="Bold" TextColor="#111827" />
+                                        </Grid>
+                                    </Grid>
+
+                                    <Button Text="VIEW SHOPS" 
+                                            IsVisible="{Binding IsSelected}"
+                                            Clicked="OnViewShopsClicked"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#064E3B" 
+                                            TextColor="White" 
+                                            CornerRadius="8" 
+                                            HeightRequest="45"
+                                            FontAttributes="Bold"
+                                            Margin="0,10,0,0"/>
+                                </StackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </StackLayout>
+        </Frame>
+    </StackLayout>
+</ContentPage>

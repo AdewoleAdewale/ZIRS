@@ -2,72 +2,78 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ZIRS.Views.ShopPaymentHistoryPage"
-           BackgroundColor="#F9FAFB">
+         Title="SHOP PAYMENT HISTORY"
+             BackgroundColor="#064E3B">
 
-    <StackLayout Padding="15" Spacing="15">
+    <StackLayout Spacing="0">
+        <Label Text="SHOP PAYMENT HISTORY" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,15,0,2"/>
+        <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" TextColor="#D1FAE5" FontSize="10" HorizontalOptions="Center" Margin="0,0,0,15"/>
 
-        <!-- Search Parameters Card -->
-        <Frame CornerRadius="12" BackgroundColor="White" Padding="15" HasShadow="False" BorderColor="#E5E7EB">
-            <StackLayout Spacing="15">
-                <Label Text="SHOP NUMBER" FontAttributes="Bold" FontSize="11" TextColor="Gray" />
-                <Frame Padding="10,0" CornerRadius="8" BackgroundColor="#F3F4F6" HasShadow="False" HeightRequest="45">
-                    <Entry Text="{Binding ShopId}" Placeholder="Enter shop number_" FontSize="13" FontAttributes="Bold" TextColor="#111827"/>
+        <ScrollView BackgroundColor="#F9FAFB">
+            <StackLayout Padding="15" Spacing="12">
+
+                <Frame CornerRadius="12" BackgroundColor="White" Padding="15" HasShadow="False" BorderColor="#E5E7EB">
+                    <StackLayout Spacing="12">
+                        <Label Text="SHOP NUMBER" FontAttributes="Bold" FontSize="10" TextColor="Gray" />
+                        <Frame Padding="10,0" CornerRadius="8" BackgroundColor="#F3F4F6" HasShadow="False" HeightRequest="45">
+                            <Entry Text="{Binding ShopId}" Placeholder="Enter shop number (e.g. 002)" FontSize="13" FontAttributes="Bold" TextColor="#111827"/>
+                        </Frame>
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                            <StackLayout Grid.Column="0" Spacing="4">
+                                <Label Text="START DATE" FontAttributes="Bold" FontSize="10" TextColor="Gray" />
+                                <Frame Padding="8,0" CornerRadius="8" BackgroundColor="#F3F4F6" HasShadow="False" HeightRequest="45">
+                                    <DatePicker Date="{Binding StartDate}" FontSize="12" TextColor="#111827" Format="yyyy-MM-dd"/>
+                                </Frame>
+                            </StackLayout>
+
+                            <StackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="END DATE" FontAttributes="Bold" FontSize="10" TextColor="Gray" />
+                                <Frame Padding="8,0" CornerRadius="8" BackgroundColor="#F3F4F6" HasShadow="False" HeightRequest="45">
+                                    <DatePicker Date="{Binding EndDate}" FontSize="12" TextColor="#111827" Format="yyyy-MM-dd"/>
+                                </Frame>
+                            </StackLayout>
+                        </Grid>
+
+                        <Button Text="CHECK PAYMENT HISTORY" 
+                                Clicked="OnCheckHistoryClicked" 
+                                BackgroundColor="#064E3B" 
+                                TextColor="White" 
+                                CornerRadius="8" 
+                                HeightRequest="46" 
+                                FontAttributes="Bold" />
+
+                        <Button Text="+ MAKE PAYMENT" 
+                                Clicked="OnDirectPaymentClicked" 
+                                BackgroundColor="#DC2626" 
+                                TextColor="White" 
+                                CornerRadius="8" 
+                                HeightRequest="46" 
+                                FontAttributes="Bold" />
+                    </StackLayout>
                 </Frame>
 
-                <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
-                    <StackLayout Grid.Column="0" Spacing="5">
-                        <Label Text="START DATE" FontAttributes="Bold" FontSize="11" TextColor="Gray" />
-                        <Frame Padding="10,0" CornerRadius="8" BackgroundColor="#F3F4F6" HasShadow="False" HeightRequest="45">
-                            <DatePicker Date="{Binding StartDate}" FontSize="13" TextColor="#111827" />
-                        </Frame>
-                    </StackLayout>
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />
 
-                    <StackLayout Grid.Column="1" Spacing="5">
-                        <Label Text="END DATE" FontAttributes="Bold" FontSize="11" TextColor="Gray" />
-                        <Frame Padding="10,0" CornerRadius="8" BackgroundColor="#F3F4F6" HasShadow="False" HeightRequest="45">
-                            <DatePicker Date="{Binding EndDate}" FontSize="13" TextColor="#111827" />
-                        </Frame>
-                    </StackLayout>
-                </Grid>
+                <Label Text="{Binding Payments.Count, StringFormat='{0} transactions found'}" FontSize="11" TextColor="Gray" Margin="5,0,0,0" />
 
-                <Button Text="CHECK PAYMENT HISTORY" 
-                        Command="{Binding LoadHistoryCommand}" 
-                        BackgroundColor="#064E3B" 
-                        TextColor="White" 
-                        CornerRadius="12" 
-                        HeightRequest="50" 
-                        FontAttributes="Bold" />
+                <CollectionView ItemsSource="{Binding Payments}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,4" Padding="12" CornerRadius="8" BackgroundColor="White" HasShadow="False" BorderColor="#E5E7EB">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding Payer, StringFormat='Payer: {0}'}" FontAttributes="Bold" FontSize="13" TextColor="#111827"/>
+                                        <Label Text="{Binding DateRecorded, StringFormat='{0:dd MMM yyyy hh:mm tt}'}" FontSize="11" TextColor="Gray" />
+                                    </StackLayout>
+                                    <Label Grid.Column="1" Text="{Binding Amount, StringFormat='₦{0:N2}'}" TextColor="#059669" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
 
-                <Button Text="+ MAKE PAYMENT" 
-                        Command="{Binding RouteDirectPaymentCommand}" 
-                        BackgroundColor="#DC2626" 
-                        TextColor="White" 
-                        CornerRadius="12" 
-                        HeightRequest="50" 
-                        FontAttributes="Bold" />
             </StackLayout>
-        </Frame>
-
-        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />
-
-        <!-- History List -->
-        <Label Text="{Binding Payments.Count, StringFormat='{0} transactions found'}" FontSize="12" TextColor="Gray" Margin="5,0,0,0" />
-
-        <CollectionView ItemsSource="{Binding Payments}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame Margin="0,5" Padding="15" CornerRadius="8" BackgroundColor="White" HasShadow="False" BorderColor="#E5E7EB">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <StackLayout Grid.Column="0" Spacing="2">
-                                <Label Text="{Binding Payer, StringFormat='Payer: {0}'}" FontAttributes="Bold" FontSize="13" TextColor="#111827"/>
-                                <Label Text="{Binding DateRecorded, StringFormat='Date: {0:dd MMM yyyy hh:mm tt}'}" FontSize="11" TextColor="Gray" />
-                            </StackLayout>
-                            <Label Grid.Column="1" Text="{Binding Amount, StringFormat='₦{0:N2}'}" TextColor="#059669" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" />
-                        </Grid>
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
+        </ScrollView>
     </StackLayout>
 </ContentPage>

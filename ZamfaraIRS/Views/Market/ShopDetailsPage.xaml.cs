@@ -1,54 +1,100 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using ZamfaraIRS.Models;
+using ZamfaraIRS.Services;
+using ZamfaraIRS.Views.Market;
 using ZIRS.Views;
 
-namespace ZamfaraIRS.Views.Market
+namespace ZamfaraIRS.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class ShopDetailsPage : ContentPage
+    public partial class ShopDetailsPage : ContentPage, INotifyPropertyChanged
     {
-        public ShopItemModel ShopData { get; set; }
+        private readonly IShopService _shopService;
+        private ShopItemModel _shopData;
+        private bool _isBusy;
 
-        public ICommand HistoryCommand { get; }
-        public ICommand RepaymentCommand { get; }
+        public ShopItemModel ShopData
+        {
+            get => _shopData;
+            set { _shopData = value; OnPropertyChanged(); }
+        }
+
+        public new bool IsBusy
+        {
+            get => _isBusy;
+            set { _isBusy = value; OnPropertyChanged(); }
+        }
 
         public ShopDetailsPage(ShopItemModel selectedShop)
         {
             InitializeComponent();
             ShopData = selectedShop;
+            _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             BindingContext = this;
+        }
 
-            // Route to Payment History, pre-filling the Shop No
-            HistoryCommand = new Command(async () => {
-                var historyPage = new ShopPaymentHistoryPage();
-                historyPage.ShopId = ShopData.ShopNo; // Auto-fill search field
-                await Navigation.PushAsync(historyPage);
-            });
+        private async void OnPaymentHistoryClicked(object sender, EventArgs e)
+        {
+            SessionManager.Instance.UpdateActivity();
+            var historyPage = new ShopPaymentHistoryPage();
+            historyPage.ShopId = ShopData.ShopNo;
+            await Navigation.PushAsync(historyPage);
+        }
 
-            // Route to Tax Repayment, mapping data to auto-fill the form
-            RepaymentCommand = new Command(async () => {
+        private async void OnMakeRepaymentClicked(object sender, EventArgs e)
+        {
+            SessionManager.Instance.UpdateActivity();
+            IsBusy = true;
 
-                // Convert ShopItemModel to ShopRepaymentVerificationModel for the existing layout
-                var verificationModel = new ShopRepaymentVerificationModel
+            try
+            {
+                // API Endpoint 8: GET /api/Shops/VerifyShopRePay
+                var verifiedRepay = await _shopService.VerifyShopRepayAsync(
+                    ShopData.ShopNo.Trim(),
+                    ShopData.MarketId,
+                    ShopData.CurrentOccupant.Trim()
+                );
+
+                if (verifiedRepay != null)
                 {
-                    ShopNo = ShopData.ShopNo,
-                    Market = ShopData.MarketName,
-                    Owner = ShopData.CurrentOccupant,
-                    ShopCategory = ShopData.ShopCat,
-                    ShopAmount = ShopData.Amount,
-                    AmountPaid = ShopData.TotalAmtPaid,
-                    AmountOwed = ShopData.Balance
-                };
+                    await Navigation.PushAsync(new ShopTaxRepaymentPage(verifiedRepay));
+                }
+                else
+                {
+                    // Fallback to locally passed data if verifiedRepay endpoint fails to match exact string
+                    var fallbackModel = new ShopRepaymentVerificationModel
+                    {
+                        ShopNo = ShopData.ShopNo,
+                        Market = ShopData.MarketName,
+                        MktId = ShopData.MarketId.ToString(),
+                        Owner = ShopData.CurrentOccupant,
+                        ShopCategory = ShopData.ShopCat,
+                        ShopAmount = ShopData.Amount,
+                        AmountPaid = ShopData.TotalAmtPaid,
+                        AmountOwed = ShopData.Balance
+                    };
+                    await Navigation.PushAsync(new ShopTaxRepaymentPage(fallbackModel));
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"Could not verify repayment info: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
-                await Navigation.PushAsync(new ShopTaxRepaymentPage(verificationModel));
-            });
+        public new event PropertyChangedEventHandler PropertyChanged;
+        protected new void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

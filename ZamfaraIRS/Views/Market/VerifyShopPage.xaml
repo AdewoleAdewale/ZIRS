@@ -2,32 +2,109 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ZamfaraIRS.Views.Market.VerifyShopPage"
-             Title="Verify Shop Status">
-    <ScrollView>
-        <StackLayout Padding="20" Spacing="15">
-            <Label Text="Verify Shop Owing Status" FontSize="20" FontAttributes="Bold" />
+            Title="VERIFY SHOP"
+             BackgroundColor="#064E3B">
 
-            <Label Text="Market" />
-            <Picker ItemsSource="{Binding Markets}" 
-                    ItemDisplayBinding="{Binding Market_Plaza}" 
-                    SelectedItem="{Binding SelectedMarket}" />
+    <StackLayout Spacing="0">
+        <Label Text="VERIFY SHOP" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,15,0,2"/>
+        <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" TextColor="#D1FAE5" FontSize="10" HorizontalOptions="Center" Margin="0,0,0,15"/>
 
-            <Label Text="Full Shop Number" />
-            <Entry Text="{Binding ShopNo}" Placeholder="e.g. GCM014" />
+        <ScrollView BackgroundColor="#F9FAFB">
+            <StackLayout Padding="20" Spacing="15">
 
-            <Button Text="Check Status" Command="{Binding VerifyCommand}" BackgroundColor="#005A9C" TextColor="White" />
+                <Label Text="SHOP NUMBER" FontSize="10" FontAttributes="Bold" TextColor="Gray" />
+                <Frame Padding="10,0" CornerRadius="8" BackgroundColor="White" BorderColor="#064E3B" HasShadow="False" HeightRequest="45">
+                    <Grid ColumnDefinitions="25, *">
+                        <Label Grid.Column="0" Text="+" FontSize="16" FontAttributes="Bold" TextColor="Gray" VerticalOptions="Center"/>
+                        <Entry Grid.Column="1" Text="{Binding ShopNo}" Placeholder="Enter shop number_" FontSize="13" TextColor="#111827"/>
+                    </Grid>
+                </Frame>
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+                <Label Text="OCCUPANT NAME" FontSize="10" FontAttributes="Bold" TextColor="Gray" />
+                <Frame Padding="10,0" CornerRadius="8" BackgroundColor="White" BorderColor="#064E3B" HasShadow="False" HeightRequest="45">
+                    <Grid ColumnDefinitions="25, *">
+                        <Label Grid.Column="0" Text="+" FontSize="16" FontAttributes="Bold" TextColor="Gray" VerticalOptions="Center"/>
+                        <Entry Grid.Column="1" Text="{Binding OccupantName}" Placeholder="Enter shop occupant name_" FontSize="13" TextColor="#111827"/>
+                    </Grid>
+                </Frame>
 
-            <!-- Result Card -->
-            <Frame IsVisible="{Binding HasResult}" BorderColor="#CCCCCC" CornerRadius="8" Padding="15">
-                <StackLayout Spacing="8">
-                    <Label Text="{Binding VerificationResult.Message}" FontAttributes="Bold" FontSize="16" TextColor="{Binding StatusColor}" />
-                    <Label Text="{Binding VerificationResult.AmountOwed, StringFormat='Amount Owed: ₦{0}'}" />
-                    <Label Text="{Binding VerificationResult.AmountPaid, StringFormat='Amount Paid: ₦{0}'}" />
-                    <Label Text="{Binding VerificationResult.LastPaymentDate, StringFormat='Last Payment: {0}'}" />
+                <Button Text="+ VERIFY SHOP NUMBER" 
+                        Clicked="OnVerifyShopClicked" 
+                        BackgroundColor="#064E3B" 
+                        TextColor="White" 
+                        CornerRadius="8" 
+                        HeightRequest="48" 
+                        FontAttributes="Bold" />
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />
+
+                <!-- Verification Result Card -->
+                <StackLayout IsVisible="{Binding HasResult}" Spacing="12">
+                    <Label Text="VERIFICATION RESULT" FontSize="10" FontAttributes="Bold" TextColor="Gray" HorizontalOptions="Center" />
+
+                    <!-- Red / Green Status Banner -->
+                    <Frame BackgroundColor="{Binding StatusBannerColor}" CornerRadius="10" Padding="15,12" HasShadow="False">
+                        <Grid ColumnDefinitions="30, *">
+                            <Label Grid.Column="0" Text="⚠" FontSize="20" TextColor="White" VerticalOptions="Center"/>
+                            <StackLayout Grid.Column="1" Spacing="0">
+                                <Label Text="PAYMENT STATUS" FontSize="9" FontAttributes="Bold" TextColor="#FEE2E2" />
+                                <Label Text="{Binding VerificationResult.Message}" FontSize="13" FontAttributes="Bold" TextColor="White" />
+                            </StackLayout>
+                        </Grid>
+                    </Frame>
+
+                    <!-- Details Card -->
+                    <Frame CornerRadius="12" BackgroundColor="White" Padding="15" HasShadow="False" BorderColor="#E5E7EB">
+                        <StackLayout Spacing="12">
+                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                <Label Grid.Column="0" Text="🏛" FontSize="20"/>
+                                <Frame Grid.Column="1" BackgroundColor="#064E3B" CornerRadius="4" Padding="10,4" HasShadow="False" HorizontalOptions="Center">
+                                    <Label Text="{Binding VerificationResult.ShopNo, StringFormat='SHOP NUMBER {0}'}" FontSize="11" FontAttributes="Bold" TextColor="White"/>
+                                </Frame>
+                                <Label Grid.Column="2" Text="OS" FontAttributes="Bold" FontSize="16" TextColor="#DC2626"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,5">
+                                <Frame Grid.Column="0" BackgroundColor="#DCFCE7" Padding="8,4" CornerRadius="4" HasShadow="False">
+                                    <StackLayout Spacing="0">
+                                        <Label Text="CATEGORY" FontSize="9" FontAttributes="Bold" TextColor="Gray"/>
+                                        <Label Text="{Binding VerificationResult.ShopCat}" FontSize="11" FontAttributes="Bold" TextColor="#065F46"/>
+                                    </StackLayout>
+                                </Frame>
+                                <Frame Grid.Column="1" BackgroundColor="#E0F2FE" Padding="8,4" CornerRadius="4" HasShadow="False">
+                                    <StackLayout Spacing="0">
+                                        <Label Text="MARKET ID" FontSize="9" FontAttributes="Bold" TextColor="Gray"/>
+                                        <Label Text="{Binding VerificationResult.MarketId}" FontSize="11" FontAttributes="Bold" TextColor="#0284C7"/>
+                                    </StackLayout>
+                                </Frame>
+                            </Grid>
+
+                            <Label Text="MONTHLY AMOUNT" FontSize="10" FontAttributes="Bold" TextColor="Gray"/>
+                            <Frame BackgroundColor="#FEF3C7" Padding="10,6" CornerRadius="6" HasShadow="False">
+                                <Label Text="{Binding VerificationResult.Amount, StringFormat='₦ {0}'}" FontSize="18" FontAttributes="Bold" TextColor="#D97706"/>
+                            </Frame>
+
+                            <Label Text="This is the monthly levy amount for this shop. Tap MAKE PAYMENT below to clear any outstanding balance." FontSize="10" TextColor="Gray"/>
+
+                            <!-- Barcode -->
+                            <StackLayout HorizontalOptions="Center" Margin="0,5">
+                                <Label Text="|||||||| |||||| |||||||||||| ||||||||" FontFamily="monospace" FontSize="16" FontAttributes="Bold" HorizontalOptions="Center"/>
+                                <Label Text="zamfara.osoftpay.net" FontSize="9" HorizontalOptions="Center" TextColor="Gray"/>
+                            </StackLayout>
+                        </StackLayout>
+                    </Frame>
+
+                    <!-- Direct Payment Bypass Button -->
+                    <Button Text="+ MAKE PAYMENT" 
+                            Clicked="OnDirectPaymentBypassClicked"
+                            BackgroundColor="#064E3B" 
+                            TextColor="White" 
+                            CornerRadius="8" 
+                            HeightRequest="48" 
+                            FontAttributes="Bold" />
                 </StackLayout>
-            </Frame>
-        </StackLayout>
-    </ScrollView>
+
+            </StackLayout>
+        </ScrollView>
+    </StackLayout>
 </ContentPage>

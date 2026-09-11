@@ -184,6 +184,11 @@ namespace ZamfaraIRS.Services
 
             return await ReceiptPrinter.PrintAsync(receipt); 
         }
+
+        internal static async Task PrintPaymentReceiptAsync(string shopNo, string market, string owner, decimal amount, decimal balanceRemaining, string paymentReference, string v, bool isReprint)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
     

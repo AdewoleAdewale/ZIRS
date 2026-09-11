@@ -1,91 +1,101 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
+using ZamfaraIRS.Views.Market;
 
-namespace ZamfaraIRS.Views.Market
+namespace ZamfaraIRS.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class VerifyShopPage : ContentPage, INotifyPropertyChanged
     {
         private readonly IShopService _shopService;
-        private ObservableCollection<MarketModel> _markets = new ObservableCollection<MarketModel>();
-        private MarketModel _selectedMarket;
         private string _shopNo;
+        private string _occupantName;
         private bool _isBusy;
         private bool _hasResult;
-        private ShopVerificationModel _verificationResult;
-        private Color _statusColor = Color.Black;
+        private ShopNoVerificationModel _verificationResult;
+        private Color _statusBannerColor = Color.FromHex("#DC2626");
 
-        public ObservableCollection<MarketModel> Markets { get => _markets; set { _markets = value; OnPropertyChanged(); } }
-        public MarketModel SelectedMarket { get => _selectedMarket; set { _selectedMarket = value; OnPropertyChanged(); } }
-        public string ShopNo { get => _shopNo; set { _shopNo = value; OnPropertyChanged(); } }
-        public new bool IsBusy { get => _isBusy; set { _isBusy = value; OnPropertyChanged(); } }
-        public bool HasResult { get => _hasResult; set { _hasResult = value; OnPropertyChanged(); } }
-        public Color StatusColor { get => _statusColor; set { _statusColor = value; OnPropertyChanged(); } }
+        public string ShopNo
+        {
+            get => _shopNo;
+            set { _shopNo = value; OnPropertyChanged(); }
+        }
 
-        public ShopVerificationModel VerificationResult
+        public string OccupantName
+        {
+            get => _occupantName;
+            set { _occupantName = value; OnPropertyChanged(); }
+        }
+
+        public new bool IsBusy
+        {
+            get => _isBusy;
+            set { _isBusy = value; OnPropertyChanged(); }
+        }
+
+        public bool HasResult
+        {
+            get => _hasResult;
+            set { _hasResult = value; OnPropertyChanged(); }
+        }
+
+        public ShopNoVerificationModel VerificationResult
         {
             get => _verificationResult;
             set { _verificationResult = value; OnPropertyChanged(); }
         }
 
-        public ICommand VerifyCommand { get; }
+        public Color StatusBannerColor
+        {
+            get => _statusBannerColor;
+            set { _statusBannerColor = value; OnPropertyChanged(); }
+        }
 
         public VerifyShopPage()
         {
             InitializeComponent();
             _shopService = new ShopService(SslHandler.GetInsecureHttpClient());
             BindingContext = this;
-            VerifyCommand = new Command(async () => await ExecuteVerify());
         }
 
-        protected override async void OnAppearing()
+        private async void OnVerifyShopClicked(object sender, EventArgs e)
         {
-            base.OnAppearing();
-            if (Markets.Count == 0)
-            {
-                var list = await _shopService.GetMarketsAsync("agent@example.com");
-                foreach (var item in list) Markets.Add(item);
-            }
-        }
+            SessionManager.Instance.UpdateActivity();
 
-        private async Task ExecuteVerify()
-        {
-            if (SelectedMarket == null || string.IsNullOrWhiteSpace(ShopNo))
+            if (string.IsNullOrWhiteSpace(ShopNo) || string.IsNullOrWhiteSpace(OccupantName))
             {
-                await DisplayAlert("Validation", "Select a market and enter the shop number", "OK");
+                await DisplayAlert("Validation", "Please input both Shop Number and Occupant Name.", "OK");
                 return;
             }
 
             IsBusy = true;
             HasResult = false;
+
             try
             {
-                var result = await _shopService.VerifyShopAsync(ShopNo.Trim(), SelectedMarket.Id);
+                // API Endpoint 9: GET /api/Shops/VerifyShopNo[cite: 1]
+                var result = await _shopService.VerifyShopNoAsync(ShopNo.Trim(), OccupantName.Trim());
+
                 if (result != null)
                 {
                     VerificationResult = result;
-                    StatusColor = result.StatusCode == "00" ? Color.Green : Color.Red;
+                    // statusCode "00" = not owing / paid ahead, "01" = owing[cite: 1]
+                    StatusBannerColor = result.StatusCode == "00" ? Color.FromHex("#059669") : Color.FromHex("#DC2626");
                     HasResult = true;
                 }
                 else
                 {
-                    await DisplayAlert("Not Found", "Shop record not found or server error.", "OK");
+                    await DisplayAlert("Not Found", "No registered shop matched this number and occupant name.", "OK");
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", ex.Message, "OK");
+                await DisplayAlert("Error", $"Verification request failed: {ex.Message}", "OK");
             }
             finally
             {
@@ -93,8 +103,25 @@ namespace ZamfaraIRS.Views.Market
             }
         }
 
+        private async void OnDirectPaymentBypassClicked(object sender, EventArgs e)
+        {
+            SessionManager.Instance.UpdateActivity();
+
+            if (VerificationResult == null) return;
+
+            // Route directly to Direct Payment screen, pre-populating fields
+            var directPaymentPage = new DirectPaymentPage();
+            directPaymentPage.ShopNumber = VerificationResult.ShopNo;
+            directPaymentPage.PortalMessage = VerificationResult.Message;
+            directPaymentPage.Amount = VerificationResult.Amount;
+
+            await Navigation.PushAsync(directPaymentPage);
+        }
+
         public new event PropertyChangedEventHandler PropertyChanged;
-        protected new void OnPropertyChanged([CallerMemberName] string name = null) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        protected new void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

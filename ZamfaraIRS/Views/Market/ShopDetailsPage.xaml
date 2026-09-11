@@ -2,96 +2,101 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ZamfaraIRS.Views.Market.ShopDetailsPage"
-             Title="SHOP DETAILS"
+            Title="SHOP DETAILS"
              BackgroundColor="#064E3B">
 
-    <ScrollView BackgroundColor="#F9FAFB" Margin="0,10,0,0">
-        <StackLayout Padding="20" Spacing="15">
+    <StackLayout Spacing="0">
+        <Label Text="SHOP DETAILS" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,15,0,2"/>
+        <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" TextColor="#D1FAE5" FontSize="10" HorizontalOptions="Center" Margin="0,0,0,15"/>
 
-            <!-- Occupant Name Card -->
-            <Frame CornerRadius="12" BackgroundColor="#ECFDF5" Padding="15" HasShadow="False">
-                <StackLayout Orientation="Horizontal" Spacing="15">
-                    <Image Source="zirs.png" HeightRequest="30" WidthRequest="30" />
-                    <StackLayout Spacing="0">
-                        <Label Text="OCCUPANT NAME" FontSize="10" FontAttributes="Bold" TextColor="Gray" />
-                        <Label Text="{Binding ShopData.CurrentOccupant}" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
+        <ScrollView BackgroundColor="#F9FAFB">
+            <StackLayout Padding="20" Spacing="15">
+
+                <!-- Occupant Name Card -->
+                <Frame CornerRadius="12" BackgroundColor="#ECFDF5" Padding="15" HasShadow="False" BorderColor="#A7F3D0">
+                    <StackLayout Orientation="Horizontal" Spacing="15">
+                        <Label Text="👤" FontSize="22" VerticalOptions="Center" TextColor="#064E3B" />
+                        <StackLayout Spacing="2" VerticalOptions="Center">
+                            <Label Text="OCCUPANT NAME" FontSize="10" FontAttributes="Bold" TextColor="#065F46" />
+                            <Label Text="{Binding ShopData.CurrentOccupant}" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
+                        </StackLayout>
                     </StackLayout>
-                </StackLayout>
-            </Frame>
+                </Frame>
 
-            <!-- Main Ledger Card -->
-            <Frame CornerRadius="16" BackgroundColor="White" Padding="20" HasShadow="True" BorderColor="#E5E7EB">
-                <StackLayout Spacing="15">
-                    <!-- Header -->
-                    <Grid ColumnDefinitions="Auto, *, Auto">
-                        <Image Grid.Column="0" Source="zirs.png" HeightRequest="40" />
-                        <Label Grid.Column="1" Text="{Binding ShopData.ShopNo, StringFormat='SHOP NO: {0}'}" FontAttributes="Bold" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" TextColor="White" BackgroundColor="#064E3B" Padding="10,5" />
-                        <Image Grid.Column="2" Source="osoft.png" HeightRequest="40" />
-                    </Grid>
+                <!-- Main Ledger Receipt Card -->
+                <Frame CornerRadius="16" BackgroundColor="White" Padding="20" HasShadow="True" BorderColor="#E5E7EB">
+                    <StackLayout Spacing="15">
+                        <Grid ColumnDefinitions="40, *, 40">
+                            <Label Grid.Column="0" Text="🏛" FontSize="24" HorizontalOptions="Start" VerticalOptions="Center"/>
+                            <Frame Grid.Column="1" BackgroundColor="#064E3B" CornerRadius="4" Padding="10,5" HasShadow="False" HorizontalOptions="Center">
+                                <Label Text="{Binding ShopData.ShopNo, StringFormat='SHOP NO: {0}'}" FontAttributes="Bold" FontSize="12" TextColor="White" />
+                            </Frame>
+                            <Label Grid.Column="2" Text="OS" FontAttributes="Bold" FontSize="18" TextColor="#DC2626" HorizontalOptions="End" VerticalOptions="Center"/>
+                        </Grid>
 
-                    <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" Margin="0,10" />
+                        <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" Margin="0,5" />
 
-                    <!-- Amount Paid -->
-                    <Label Text="AMOUNT PAID" FontSize="11" FontAttributes="Bold" HorizontalOptions="Center" TextColor="Gray" />
-                    <Label Text="{Binding ShopData.TotalAmtPaid, StringFormat='{0:N2}'}" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#064E3B" />
+                        <Label Text="AMOUNT PAID" FontSize="11" FontAttributes="Bold" HorizontalOptions="Center" TextColor="Gray" />
+                        <Label Text="{Binding ShopData.TotalAmtPaid, StringFormat='₦{0}'}" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#064E3B" />
 
-                    <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" Margin="0,10" />
+                        <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" Margin="0,5" />
 
-                    <!-- Ledger Grid -->
-                    <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, *" RowSpacing="15">
-                        <Frame Grid.Row="0" Grid.Column="0" BackgroundColor="#FEE2E2" Padding="5" CornerRadius="4" HasShadow="False" HorizontalOptions="Start">
-                            <Label Text="BALANCE" FontSize="10" FontAttributes="Bold" TextColor="#DC2626" />
-                        </Frame>
-                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding ShopData.Balance, StringFormat='₦ {0:N2}'}" FontSize="12" FontAttributes="Bold" TextColor="#DC2626" HorizontalOptions="End" />
+                        <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="Auto, *" RowSpacing="12">
+                            <Frame Grid.Row="0" Grid.Column="0" BackgroundColor="#FEE2E2" Padding="6,2" CornerRadius="4" HasShadow="False">
+                                <Label Text="BALANCE" FontSize="10" FontAttributes="Bold" TextColor="#DC2626" />
+                            </Frame>
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding ShopData.Balance, StringFormat='₦ {0}'}" FontSize="12" FontAttributes="Bold" TextColor="#DC2626" HorizontalOptions="End" VerticalOptions="Center" />
 
-                        <Frame Grid.Row="1" Grid.Column="0" BackgroundColor="#DCFCE7" Padding="5" CornerRadius="4" HasShadow="False" HorizontalOptions="Start">
-                            <Label Text="CAT. AMOUNT" FontSize="10" FontAttributes="Bold" TextColor="#059669" />
-                        </Frame>
-                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding ShopData.Amount, StringFormat='₦ {0:N2}'}" FontSize="12" FontAttributes="Bold" TextColor="#DC2626" HorizontalOptions="End" />
+                            <Frame Grid.Row="1" Grid.Column="0" BackgroundColor="#DCFCE7" Padding="6,2" CornerRadius="4" HasShadow="False">
+                                <Label Text="CAT. AMOUNT" FontSize="10" FontAttributes="Bold" TextColor="#059669" />
+                            </Frame>
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding ShopData.Amount, StringFormat='₦ {0}'}" FontSize="12" FontAttributes="Bold" TextColor="#DC2626" HorizontalOptions="End" VerticalOptions="Center" />
 
-                        <Frame Grid.Row="2" Grid.Column="0" BackgroundColor="#E0F2FE" Padding="5" CornerRadius="4" HasShadow="False" HorizontalOptions="Start">
-                            <Label Text="LAST PAYMENT" FontSize="10" FontAttributes="Bold" TextColor="#0284C7" />
-                        </Frame>
-                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding ShopData.LastPaymentDate}" FontSize="12" FontAttributes="Bold" TextColor="#0284C7" HorizontalOptions="End" />
-                    </Grid>
+                            <Frame Grid.Row="2" Grid.Column="0" BackgroundColor="#E0F2FE" Padding="6,2" CornerRadius="4" HasShadow="False">
+                                <Label Text="LAST PAYMENT" FontSize="10" FontAttributes="Bold" TextColor="#0284C7" />
+                            </Frame>
+                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding ShopData.LastPaymentDate}" FontSize="12" FontAttributes="Bold" TextColor="#0284C7" HorizontalOptions="End" VerticalOptions="Center" />
+                        </Grid>
 
-                    <!-- Simulated Barcode -->
-                    <StackLayout Margin="0,20,0,0" HorizontalOptions="Center">
-                        <Image Source="barcode_placeholder.png" HeightRequest="60" WidthRequest="200" Aspect="AspectFill" />
-                        <Label Text="zamfara.osoftpay.net" FontSize="10" HorizontalOptions="Center" TextColor="Black" />
+                        <!-- Barcode Simulation -->
+                        <StackLayout Margin="0,15,0,0" HorizontalOptions="Center" Spacing="4">
+                            <Label Text="|||||||| |||||| |||||||||||| |||||||| ||||||||||" FontFamily="monospace" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" TextColor="Black"/>
+                            <Label Text="zamfara.osoftpay.net" FontSize="10" HorizontalOptions="Center" TextColor="Gray" />
+                        </StackLayout>
                     </StackLayout>
-                </StackLayout>
-            </Frame>
+                </Frame>
 
-            <!-- Info Message -->
-            <Frame BackgroundColor="#F0F9FF" BorderColor="#BAE6FD" CornerRadius="8" Padding="10" HasShadow="False">
-                <StackLayout Orientation="Horizontal" Spacing="10">
-                    <Image Source="testrun.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Start" />
-                    <StackLayout Spacing="2">
-                        <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" FontAttributes="Bold" FontSize="11" TextColor="#111827" />
-                        <Label Text="This shows the payment status for the selected shop. Check the balance field for any outstanding amount." FontSize="10" TextColor="#4B5563" />
+                <!-- Status Note -->
+                <Frame BackgroundColor="#F0F9FF" BorderColor="#BAE6FD" CornerRadius="8" Padding="12" HasShadow="False">
+                    <StackLayout Orientation="Horizontal" Spacing="10">
+                        <Label Text="ℹ" TextColor="#0284C7" FontSize="16" VerticalOptions="Start"/>
+                        <StackLayout Spacing="2">
+                            <Label Text="ZAMFARA INTERNAL REVENUE SERVICE (ZIRS)" FontAttributes="Bold" FontSize="11" TextColor="#0369A1" />
+                            <Label Text="This shows the payment status for the selected shop. Check the balance field for any outstanding amount." FontSize="10" TextColor="#4B5563" />
+                        </StackLayout>
                     </StackLayout>
-                </StackLayout>
-            </Frame>
+                </Frame>
 
-            <!-- Action Buttons -->
-            <Button Text="PAYMENT HISTORY" 
-                    Command="{Binding HistoryCommand}"
-                    BackgroundColor="#064E3B" 
-                    TextColor="White" 
-                    CornerRadius="12" 
-                    HeightRequest="50" 
-                    FontAttributes="Bold" 
-                    Margin="0,10,0,0"/>
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />
 
-            <Button Text="MAKE REPAYMENT" 
-                    Command="{Binding RepaymentCommand}"
-                    BackgroundColor="#EF4444" 
-                    TextColor="White" 
-                    CornerRadius="12" 
-                    HeightRequest="50" 
-                    FontAttributes="Bold" />
+                <!-- Action Buttons -->
+                <Button Text="PAYMENT HISTORY" 
+                        Clicked="OnPaymentHistoryClicked"
+                        BackgroundColor="#064E3B" 
+                        TextColor="White" 
+                        CornerRadius="10" 
+                        HeightRequest="48" 
+                        FontAttributes="Bold" />
 
-        </StackLayout>
-    </ScrollView>
+                <Button Text="MAKE REPAYMENT" 
+                        Clicked="OnMakeRepaymentClicked"
+                        BackgroundColor="#DC2626" 
+                        TextColor="White" 
+                        CornerRadius="10" 
+                        HeightRequest="48" 
+                        FontAttributes="Bold" />
+
+            </StackLayout>
+        </ScrollView>
+    </StackLayout>
 </ContentPage>
