@@ -79,6 +79,8 @@ namespace ZamfaraIRS.Models
 
         [JsonPropertyName("lga")]
         public string Lga { get; set; }
+        public bool IsExpanded { get; internal set; }
+        public string ExpandIcon { get; internal set; }
     }
 
     public class ApiResponse
