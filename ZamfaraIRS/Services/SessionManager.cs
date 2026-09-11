@@ -13,10 +13,10 @@ namespace ZamfaraIRS.Services
 
         private DateTime _lastActivityTime;
         private Timer _sessionTimer;
-        private const int SESSION_TIMEOUT_MINUTES = 30;
+        private const int SESSION_TIMEOUT_MINUTES = 30; // 30 minutes of inactivity allowed[cite: 12]
         private const int CHECK_INTERVAL_SECONDS = 60;
         private bool _isSessionActive = false;
-        private bool _isSessionRunning = false;
+
         public static SessionManager Instance
         {
             get
@@ -36,29 +36,22 @@ namespace ZamfaraIRS.Services
         }
 
         /// <summary>
-        /// Attempts to validate existing credentials and restore active session state.
+        /// Attempts to validate existing credentials and restore active session state[cite: 12].
         /// </summary>
         public async Task<bool> TryAutoLoginAsync()
         {
             try
             {
-                // 1. Check if user enabled Remember Me
-                if (!SessionService.IsRememberMe) 
+                if (!SessionService.IsRememberMe)
                     return false;
 
-                // 2. Validate SecureStorage credentials (checks 30-day absolute expiration)
-                var credentials = await SecureStorageService.GetCredentialsAsync(); 
-                if (credentials == null)
-                    return false;
-
-                // 3. Verify and hydrate user session from stored JSON
-                bool restored = SessionService.RestoreSession(); 
+                // Validate and hydrate user session from stored JSON
+                bool restored = SessionService.RestoreSession();
                 if (!restored)
                     return false;
 
-                // 4. Mark login flag and start inactivity monitoring
                 App.IsUserLoggedIn = true;
-                StartSession(); 
+                StartSession();
 
                 return true;
             }
@@ -82,7 +75,7 @@ namespace ZamfaraIRS.Services
                     TimeSpan.FromSeconds(CHECK_INTERVAL_SECONDS),
                     TimeSpan.FromSeconds(CHECK_INTERVAL_SECONDS));
 
-                System.Diagnostics.Debug.WriteLine("Session started"); 
+                System.Diagnostics.Debug.WriteLine("Session started");
             }
         }
 
@@ -94,16 +87,17 @@ namespace ZamfaraIRS.Services
                 _sessionTimer?.Change(Timeout.Infinite, Timeout.Infinite);
                 _sessionTimer?.Dispose();
                 _sessionTimer = null;
-                System.Diagnostics.Debug.WriteLine("Session stopped"); 
+                System.Diagnostics.Debug.WriteLine("Session stopped");
             }
         }
 
+        /// <summary>
+        /// Call this method from buttons and entry fields in BOTH Market and Keke modules[cite: 12].
+        /// </summary>
         public void UpdateActivity()
         {
             if (!_isSessionActive) return;
-
             _lastActivityTime = DateTime.Now;
-            _ = SecureStorageService.UpdateLastActivityAsync(); 
         }
 
         private void CheckSessionTimeout(object state)
@@ -114,9 +108,9 @@ namespace ZamfaraIRS.Services
 
             if (inactiveTime.TotalMinutes >= SESSION_TIMEOUT_MINUTES)
             {
-                System.Diagnostics.Debug.WriteLine("Session timeout - logging out user"); 
+                System.Diagnostics.Debug.WriteLine("Session timeout - logging out user");
                 StopSession();
-                Device.BeginInvokeOnMainThread(async () => await LogoutAsync(isTimeout: true)); 
+                Device.BeginInvokeOnMainThread(async () => await LogoutAsync(isTimeout: true));
             }
         }
 
@@ -126,16 +120,15 @@ namespace ZamfaraIRS.Services
             {
                 StopSession();
 
-                App.IsUserLoggedIn = false; 
-                SessionService.ClearSession(); 
-                await SecureStorageService.ClearCredentialsAsync(); 
+                App.IsUserLoggedIn = false;
+                SessionService.ClearSession();
 
                 if (isTimeout)
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         "Session Expired",
                         "Your session has expired due to inactivity. Please login again.",
-                        "OK"); 
+                        "OK");
                 }
 
                 Device.BeginInvokeOnMainThread(() =>
@@ -144,32 +137,13 @@ namespace ZamfaraIRS.Services
                     {
                         BarBackgroundColor = Color.FromHex("#064E3B"),
                         BarTextColor = Color.White
-                    }
-                    ;
+                    };
                 });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error during logout: {ex.Message}"); 
+                System.Diagnostics.Debug.WriteLine($"Error during logout: {ex.Message}");
             }
-        }
-
-        public double GetRemainingSessionTime()
-        {
-            TimeSpan inactiveTime = DateTime.Now - _lastActivityTime;
-            double remainingMinutes = SESSION_TIMEOUT_MINUTES - inactiveTime.TotalMinutes;
-            return Math.Max(0, remainingMinutes); 
-        }
-
-        public bool IsSessionExpiringSoon()
-        {
-            return GetRemainingSessionTime() < 5; 
-        }
-
-        public void ResetSession()
-        {
-            UpdateActivity();
-            System.Diagnostics.Debug.WriteLine("Session reset - timeout extended"); 
         }
     }
 }

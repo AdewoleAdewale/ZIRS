@@ -38,33 +38,11 @@ namespace ZamfaraIRS.Services
             set => Preferences.Set(KeyPassword, value);
         }
 
-        public static void SaveSession(string email, string password, string token, string userDataJson)
+        public static void SaveSession(string email, string jsonResponse)
         {
             SavedEmail = email;
-            Preferences.Set(KeyToken, token ?? string.Empty);
-            Preferences.Set(KeyUserData, userDataJson ?? string.Empty);
-
-            if (IsRememberPassword)
-                SavedPassword = password;
-            else
-                Preferences.Remove(KeyPassword);
+            Preferences.Set("UserDataJson", jsonResponse ?? string.Empty);
         }
-
-        public static bool TryAutoLogin()
-        {
-            if (!IsRememberMe) return false;
-
-            string json = Preferences.Get(KeyUserData, string.Empty);
-            bool hasUserData = !string.IsNullOrEmpty(json);
-
-            if (hasUserData)
-            {
-                return RestoreSession();
-            }
-
-            return false;
-        }
-
         /// <summary>
         /// Restores static session properties on MainPage from stored UserDataJson.
         /// </summary>
@@ -86,7 +64,7 @@ namespace ZamfaraIRS.Services
                         MainPage.Name = a.name;
                         MainPage.Pin = a.pin;
                         MainPage.Super_Agent = a.SuperAgent;
-                        MainPage.Category = a.category;
+                        MainPage.Category = a.category; // Works for "keke", "shop", "market", etc.[cite: 12]
                         MainPage.CollectionPoint = a.collectionPoint;
                         MainPage.Message = response.message;
                         App.IsUserLoggedIn = true;

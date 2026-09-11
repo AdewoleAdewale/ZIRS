@@ -17,7 +17,7 @@ namespace ZamfaraIRS.Services
             var receipt = ReceiptPrinter.CreateBrandedReceipt(); 
             receipt.ReceiptBannerText = isReprint ? "SHOP REGISTRATION (REPRINT)" : "SHOP REGISTRATION";
             receipt.ReceiptNumber = payerId; 
-            receipt.AgentName = agentEmail; 
+            receipt.AgentName = MainPage.Name; 
             receipt.CollectionPoint = marketName; 
             receipt.BarcodeLabel = $"{BrandConfig.VerifyReceiptUrl}{payerId}"; 
 
@@ -72,7 +72,7 @@ namespace ZamfaraIRS.Services
             var receipt = ReceiptPrinter.CreateBrandedReceipt(); 
             receipt.ReceiptBannerText = isReprint ? "SHOP REPAYMENT (REPRINT)" : "OFFICIAL REPAYMENT RECEIPT"; 
             receipt.ReceiptNumber = refNo; 
-            receipt.AgentName = agentEmail; 
+            receipt.AgentName = MainPage.Name; 
             receipt.CollectionPoint = marketName; 
             receipt.TotalAmount = amountPaid + balanceRemaining; 
             receipt.AmountPaid = amountPaid; 
@@ -87,34 +87,35 @@ namespace ZamfaraIRS.Services
 
             receipt.Items.Add(new ReceiptItem
             {
-                Description = $"Shop Rent: {categoryName}",
-                Amount = amountPaid
+                Description = "MARKET",
+                Amount = 0m,
+                SubText = marketName
             });
-
+   
             receipt.Items.Add(new ReceiptItem
             {
-                Description = "Shop Number",
+                Description = "SHOP NO",
                 Amount = 0m,
                 SubText = shopNo
             });
 
             receipt.Items.Add(new ReceiptItem
             {
-                Description = "Occupant / Tenant",
+                Description = "OCCUPANT",
                 Amount = 0m,
                 SubText = occupantName
             });
 
             receipt.Items.Add(new ReceiptItem
             {
-                Description = "Market",
-                Amount = 0m,
-                SubText = marketName
+                Description = $"SHOP RENT: {categoryName}",
+                Amount = amountPaid
             });
+
 
             receipt.Items.Add(new ReceiptItem
             {
-                Description = "Date",
+                Description = "DATE",
                 Amount = 0m,
                 SubText = DateTime.Now.ToString("dd MMM yyyy HH:mm")
             });
@@ -150,34 +151,34 @@ namespace ZamfaraIRS.Services
 
             receipt.Items.Add(new ReceiptItem
             {
-                Description = "Shop Payment / Repayment",
-                Amount = amountPaid
+                Description = "MARKET",
+                Amount = 0m,
+                SubText = marketName
             });
-
             receipt.Items.Add(new ReceiptItem
             {
-                Description = "Shop Number",
+                Description = "TENANT",
+                Amount = 0m,
+                SubText = occupantName
+            });
+            receipt.Items.Add(new ReceiptItem
+            {
+                Description = "SHOP NO",
                 Amount = 0m,
                 SubText = shopNo
             });
 
-            receipt.Items.Add(new ReceiptItem
-            {
-                Description = "Occupant Name",
-                Amount = 0m,
-                SubText = occupantName
-            });
 
             receipt.Items.Add(new ReceiptItem
             {
-                Description = "Market Complex",
-                Amount = 0m,
-                SubText = marketName
+                Description = "SHOP PAYMENT",
+                Amount = amountPaid
             });
 
+        
             receipt.Items.Add(new ReceiptItem
             {
-                Description = "Date",
+                Description = "DATE",
                 Amount = 0m,
                 SubText = date
             });

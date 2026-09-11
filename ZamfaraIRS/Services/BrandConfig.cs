@@ -38,10 +38,10 @@ namespace ZamfaraIRS.Services
         public const string ReceiptLogoAsset = "Logo.png";
 
         // ── API endpoints ────────────────────────────────────────
-        public const string ApiBaseUrl = "https://yobe.osoftpay.net";
+        public const string ApiBaseUrl = "https://zamfara.osoftpay.net/";
         public static string LoginUrl => ApiBaseUrl + "/api/taskpayers/SagentLogin";
         public static string CentralCollectUrl => ApiBaseUrl + "/api/SingleCollections/PostCollect/NewCollect";
-        public static string VerifyReceiptUrl => ApiBaseUrl + "/api/SingleCollections/v1/VerifyPayment?TransactId=";
+        public static string VerifyReceiptUrl => ApiBaseUrl + "SingleCollections/Verify?TransactId=";
 
         // ── Session policy ───────────────────────────────────────
         /// <summary>Minutes of inactivity before the agent must log in again.</summary>

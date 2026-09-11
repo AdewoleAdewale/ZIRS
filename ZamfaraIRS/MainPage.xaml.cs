@@ -457,23 +457,29 @@ namespace ZamfaraIRS
             }
         }
 
+        // Inside MainPage.xaml.cs LoginRequestAsync method:
         private async Task<(LoginResponse, string)> LoginRequestAsync(string email, string password, CancellationToken cancellationToken)
         {
             string sanitizedEmail = Uri.EscapeDataString(email);
             string sanitizedPassword = Uri.EscapeDataString(password);
 
-            // Updated from /v1/ to /v2/ to match your live working endpoint
+            // Points to the required v2 Auth endpoint for Zamfara[cite: 9]
             string url = $"https://zamfara.osoftpay.net/api/TaskPayers/v2/AgentLogin?UserName={sanitizedEmail}&Password={sanitizedPassword}";
 
             using (var response = await _httpClient.GetAsync(url, cancellationToken))
             {
                 response.EnsureSuccessStatusCode();
                 string json = await response.Content.ReadAsStringAsync();
+                var result = Newtonsoft.Json.JsonConvert.DeserializeObject<LoginResponse>(json);
 
-                if (string.IsNullOrWhiteSpace(json))
-                    throw new Exception("Empty response received from server");
+                // Starts session timer directly on successful fetch
+                if (result != null && result.responseCode == "00")
+                {
+                    SessionService.SaveSession(email, json);
+                    SessionService.RestoreSession();
+                    SessionManager.Instance.StartSession();
+                }
 
-                var result = JsonConvert.DeserializeObject<LoginResponse>(json);
                 return (result, json);
             }
         }
@@ -488,7 +494,7 @@ namespace ZamfaraIRS
                 bool rememberMe = RememberMeCheckbox.IsChecked;
                 SessionService.IsRememberMe = rememberMe;
                 SessionService.IsRememberPassword = rememberMe;
-                SessionService.SaveSession(email, password, string.Empty, rawJson);
+                SessionService.SaveSession(email, password);
                 await SecureStorageService.SaveCredentialsAsync(email, password, rememberMe);
 
                 ValidUserMail = email;

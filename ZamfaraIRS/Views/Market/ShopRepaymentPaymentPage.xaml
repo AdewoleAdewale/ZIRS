@@ -149,6 +149,8 @@
                                     </Grid>
                                 </Frame>
 
+                                <!-- ... (Keep everything else above the same) ... -->
+
                                 <Grid ColumnSpacing="10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="100" />
@@ -164,11 +166,14 @@
 
                                     <StackLayout Grid.Column="1" Spacing="4">
                                         <Label Text="CALCULATED AMOUNT (₦)" Style="{StaticResource FieldHeaderLabelStyle}"/>
-                                        <Frame Style="{StaticResource InputFrameStyle}">
-                                            <Entry x:Name="txtPayAmount" IsReadOnly="True" FontAttributes="Bold" TextColor="#065F46" />
+                                        <!-- Added background color and InputTransparent to completely lock it -->
+                                        <Frame Style="{StaticResource InputFrameStyle}" BackgroundColor="#F1F5F9">
+                                            <Entry x:Name="txtPayAmount" IsReadOnly="True" InputTransparent="True" FontAttributes="Bold" TextColor="#065F46" BackgroundColor="Transparent" />
                                         </Frame>
                                     </StackLayout>
                                 </Grid>
+
+                                <!-- ... (Keep everything else below the same) ... -->
 
                                 <StackLayout Spacing="4">
                                     <Label Text="AGENT SECURITY PIN *" Style="{StaticResource FieldHeaderLabelStyle}"/>
@@ -214,7 +219,7 @@
                             </Frame>
 
                             <StackLayout Spacing="8" Margin="0,6,0,0">
-                                <Button x:Name="BtnReprintReceipt" Text="🖨️ REPRINT RECEIPT" Clicked="OnReprintReceiptClicked" Style="{StaticResource PrimaryButtonStyle}"/>
+                                <Button x:Name="BtnReprintReceipt" Text=" REPRINT RECEIPT" Clicked="OnReprintReceiptClicked" Style="{StaticResource PrimaryButtonStyle}"/>
                                 <Button Text="NEW TRANSACTION" Clicked="OnNewTransactionClicked" BackgroundColor="#059669" TextColor="White" CornerRadius="12" HeightRequest="48" FontAttributes="Bold" />
                             </StackLayout>
                         </StackLayout>

@@ -1084,10 +1084,10 @@ namespace ZamfaraIRS.Services
 
     public sealed class ReceiptData
     {
-        public string StoreName { get; set; } = "ZAMFARA STATE INTERNAL REVENUE SERVICE";
+        public string StoreName { get; set; } = "ZAMFARA STATE INTERNAL REVENUE ";
         public string StoreSubTitle { get; set; }
         public string StoreAddress { get; set; } = "Zamfara State Revenue Service";
-        public string StorePhone { get; set; } = "Contact us: +234 813 284 9470,+234 806 161 7026";
+        public string StorePhone { get; set; } = "Contact us: 0813 284 9470, 0806 161 7026";
         public string ReceiptNumber { get; set; } = "N/A";
         public string AgentName { get; set; }
         public string CollectionPoint { get; set; }
