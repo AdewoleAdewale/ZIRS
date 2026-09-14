@@ -22,7 +22,7 @@
                 <Frame CornerRadius="16" BackgroundColor="White" Padding="20" HasShadow="True" BorderColor="#E5E7EB">
                     <StackLayout Spacing="15">
                         <StackLayout Orientation="Horizontal" Spacing="10">
-                            <Image Source="zamfara_seal.png" HeightRequest="25" WidthRequest="25" />
+                            <Image Source="zirs.png" HeightRequest="25" WidthRequest="25" />
                             <Label Text="SELECT DATE RANGE" FontAttributes="Bold" FontSize="13" TextColor="#111827" VerticalOptions="Center" />
                         </StackLayout>
 
@@ -44,7 +44,7 @@
                             </StackLayout>
                         </Grid>
 
-                        <Button Text="🔍 SEARCH TRANSACTIONS" 
+                        <Button Text=" SEARCH TRANSACTIONS" 
                                 Command="{Binding SearchTransactionsCommand}" 
                                 BackgroundColor="#064E3B" 
                                 TextColor="White" 
@@ -60,7 +60,7 @@
                 <!-- Transaction Summary Card -->
                 <Frame IsVisible="{Binding HasResults}" CornerRadius="12" BackgroundColor="#DCFCE7" Padding="15" HasShadow="False" BorderColor="#A7F3D0">
                     <Grid ColumnDefinitions="Auto, *, Auto">
-                        <Image Grid.Column="0" Source="chart_icon.png" HeightRequest="30" WidthRequest="30" VerticalOptions="Center"/>
+                        <Image Grid.Column="0" Source="add.png" HeightRequest="30" WidthRequest="30" VerticalOptions="Center"/>
                         <StackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center" Margin="10,0,0,0">
                             <Label Text="{Binding SummaryText}" FontAttributes="Bold" FontSize="13" TextColor="#065F46" />
                             <Label Text="Transaction Summary" FontSize="10" TextColor="#047857" />
@@ -72,7 +72,7 @@
                 <!-- Transaction Records Header -->
                 <Frame IsVisible="{Binding HasResults}" BackgroundColor="#064E3B" CornerRadius="12" Padding="15,10" HasShadow="False">
                     <StackLayout Orientation="Horizontal" Spacing="10">
-                        <Image Source="clipboard_icon.png" HeightRequest="20" WidthRequest="20" />
+                        <Image Source="add.png" HeightRequest="20" WidthRequest="20" />
                         <Label Text="TRANSACTION RECORDS" FontAttributes="Bold" FontSize="12" TextColor="White" VerticalOptions="Center" />
                     </StackLayout>
                 </Frame>
@@ -95,7 +95,7 @@
                                     <!-- Amount & Branding Row -->
                                     <Grid ColumnDefinitions="Auto, *">
                                         <StackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
-                                            <Image Source="zamfara_seal.png" HeightRequest="40" WidthRequest="40" />
+                                            <Image Source="zirs.png" HeightRequest="40" WidthRequest="40" />
                                             <Label Text="ZIRS" FontSize="9" FontAttributes="Bold" TextColor="#059669" HorizontalOptions="Center" />
                                         </StackLayout>
 

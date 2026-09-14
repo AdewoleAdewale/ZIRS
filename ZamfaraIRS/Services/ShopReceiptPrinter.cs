@@ -187,7 +187,41 @@ namespace ZamfaraIRS.Services
             return await ReceiptPrinter.PrintAsync(receipt); 
         }
 
-      
+        public static async Task<bool> PrintKekeReceiptAsync(
+              string transactionNo,
+              string vehiclePlateNo,
+              string serviceName,
+              decimal amountPaid,
+              string lga,
+              string agentEmail,
+              bool isReprint = false)
+        {
+            // Note: Assuming ReceiptPrinter is your underlying ESC/POS or native SDK wrapper
+            var receipt = ReceiptPrinter.CreateBrandedReceipt();
+            if (receipt == null) return false;
+
+            receipt.StoreName = "ZAMFARA STATE INTERNAL REVENUE SERVICE";
+            receipt.StoreSubTitle = isReprint ? "KEKE PERMIT (REPRINT)" : "KEKE / TRICYCLE TICKET";
+            receipt.ReceiptNumber = transactionNo;
+            receipt.AgentName = agentEmail;
+            receipt.CollectionPoint = lga;
+            receipt.PrintDate = DateTime.Now;
+            receipt.AmountPaid = amountPaid;
+            receipt.TotalAmount = amountPaid;
+
+            receipt.Items = new List<ReceiptItem>
+            {
+                new ReceiptItem { Description = serviceName, Amount = amountPaid },
+                new ReceiptItem { Description = "Vehicle Plate No", SubText = vehiclePlateNo, Amount = 0 }
+            };
+
+            receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/verify?ref={transactionNo}";
+            receipt.FooterLine1 = isReprint ? "*** REPRINTED RECEIPT ***" : "Status: APPROVED SUCCESSFUL";
+            receipt.FooterLine2 = "POWERED BY OSOFTPAY";
+
+            await ReceiptPrinter.PrintAsync(receipt);
+            return true;
+        }
     }
 }
     

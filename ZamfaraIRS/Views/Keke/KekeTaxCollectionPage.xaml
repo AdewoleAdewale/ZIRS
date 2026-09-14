@@ -1,17 +1,90 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="ZamfaraIRS.Views.Keke.KekeTaxCollectionPage">
-    <ContentPage.Content>
-        <StackLayout>
-            <!-- Core Data Bindings -->
-            <Entry Text="{Binding ServiceName}" IsReadOnly="True" />
-            <Entry Text="{Binding Description}" IsReadOnly="True" />
-            <Entry Text="{Binding Amount, StringFormat='₦{0:N2}'}" IsReadOnly="True" />
-            <Entry Text="{Binding PayerId}" Placeholder="Enter Payer ID or Body Number" />
-            <Entry Text="{Binding AgentPin}" Placeholder="Enter 4-digit PIN" IsPassword="True" MaxLength="4" Keyboard="Numeric" />
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:yummy="clr-namespace:Xamarin.Forms.PancakeView;assembly=Xamarin.Forms.PancakeView"
+             x:Class="ZamfaraIRS.Views.Keke.KekeTaxCollectionPage"
+             BackgroundColor="#064E3B"
+             NavigationPage.HasNavigationBar="False">
 
-            <Button Text="PROCESS PAYMENT" Command="{Binding ProcessPaymentCommand}" BackgroundColor="#064E3B" TextColor="White" />
+    <Grid>
+        <!-- Main Form (`5_2.jpeg`) -->
+        <StackLayout Spacing="0">
+            <StackLayout Padding="20,40,20,20" Spacing="5">
+                <Label Text="TAX COLLECTION SYSTEM" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
+                <Label Text="Secure Payment Processing" TextColor="#A7F3D0" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" />
+            </StackLayout>
+
+            <Frame BackgroundColor="#F9FAFB" CornerRadius="24" Padding="20" HasShadow="False" VerticalOptions="FillAndExpand">
+                <ScrollView VerticalScrollBarVisibility="Never">
+                    <StackLayout Spacing="15">
+
+                        <Label Text="📋 Service Information" FontSize="12" FontAttributes="Bold" TextColor="#92400E" />
+
+                        <Label Text="Service Name" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
+                        <Frame Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
+                            <Entry Text="{Binding SelectedService.ServiceName}" IsReadOnly="True" FontSize="13" FontAttributes="Bold" TextColor="#111827" />
+                        </Frame>
+
+                        <Label Text="Description" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
+                        <Frame Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
+                            <Entry Text="{Binding SelectedService.ServiceDescription}" IsReadOnly="True" FontSize="13" FontAttributes="Bold" TextColor="#111827" />
+                        </Frame>
+
+                        <Label Text="💰 Payment Details" FontSize="12" FontAttributes="Bold" TextColor="#059669" Margin="0,10,0,0"/>
+
+                        <Label Text="Service Amount (₦)" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
+                        <Frame Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
+                            <Entry Text="{Binding SelectedService.ServiceAmount, StringFormat='₦{0}'}" IsReadOnly="True" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
+                        </Frame>
+
+                        <Label Text="👤 Payer Information" FontSize="12" FontAttributes="Bold" TextColor="#D97706" Margin="0,10,0,0"/>
+
+                        <Label Text="Payer ID / Body Number" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Frame Grid.Column="0" Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
+                                <Entry Text="{Binding PayerId}" Placeholder="Enter Payer ID" IsReadOnly="{Binding IsVerified}" FontSize="13" FontAttributes="Bold" TextTransform="Uppercase" />
+                            </Frame>
+                            <Button Grid.Column="1" Text="VERIFY" Command="{Binding VerifyPayerCommand}" IsVisible="{Binding IsNotVerified}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" />
+                        </Grid>
+
+                        <Label Text="🔒 Agent PIN" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
+                        <Frame Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
+                            <Entry Text="{Binding PinInput}" Placeholder="Enter 4-digit PIN" IsPassword="True" MaxLength="4" Keyboard="Numeric" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
+                        </Frame>
+
+                        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />
+
+                        <Button Text="PROCESS PAYMENT" Command="{Binding ProcessPaymentCommand}" IsEnabled="{Binding IsVerified}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="12" HeightRequest="55" FontAttributes="Bold" Margin="0,15,0,0" />
+
+                        <Label Text="🔒 Secure encrypted transaction" TextColor="#059669" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,10,0,20"/>
+                    </StackLayout>
+                </ScrollView>
+            </Frame>
         </StackLayout>
-    </ContentPage.Content>
+
+        <!-- Verification Success Popup (`22.jpeg`) -->
+        <ContentView IsVisible="{Binding ShowVerifySuccessSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
+            <Frame BackgroundColor="White" CornerRadius="8" Padding="25" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="280" HasShadow="True">
+                <StackLayout Spacing="15">
+                    <Label Text="Verification Success" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                    <Label Text="Payer ID verified successfully" FontSize="14" TextColor="#374151" />
+                    <Button Text="OK" Command="{Binding CloseSheetsCommand}" BackgroundColor="Transparent" TextColor="#064E3B" FontAttributes="Bold" HorizontalOptions="End" Margin="0,15,0,0" />
+                </StackLayout>
+            </Frame>
+        </ContentView>
+
+        <!-- Payment Failed Bottom Sheet (`11.jpeg`) -->
+        <ContentView IsVisible="{Binding ShowErrorSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
+            <yummy:PancakeView CornerRadius="20,20,0,0">
+                <StackLayout VerticalOptions="End" BackgroundColor="White" Padding="25" Spacing="15" >
+                    <Label Text="✖" FontSize="50" TextColor="#DC2626" FontAttributes="Bold" HorizontalOptions="Center" />
+                    <Label Text="Payment Failed" FontSize="20" FontAttributes="Bold" TextColor="#DC2626" HorizontalOptions="Center" />
+                    <Label Text="{Binding ErrorMessage}" FontSize="13" FontAttributes="Bold" TextColor="#111827" HorizontalTextAlignment="Center" Margin="0,0,0,15" />
+
+                    <Button Text="TRY AGAIN" Command="{Binding CloseSheetsCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="10" HeightRequest="50" FontAttributes="Bold" />
+                    <Button Text="CLOSE" Command="{Binding CloseSheetsCommand}" BackgroundColor="Transparent" TextColor="#DC2626" BorderColor="#DC2626" BorderWidth="1" CornerRadius="10" HeightRequest="50" FontAttributes="Bold" />
+                </StackLayout>
+                </yummy:PancakeView>
+       
+        </ContentView>
+    </Grid>
 </ContentPage>

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Xamarin.Forms;
+using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
 
 namespace ZamfaraIRS.Views.Keke
@@ -9,57 +10,130 @@ namespace ZamfaraIRS.Views.Keke
     public partial class KekeTaxCollectionPage : ContentPage
     {
         private readonly IKekeService _kekeService;
+        private bool _isBusy;
+        private bool _isVerified;
 
-        public string ServiceName { get; set; } = "DAILY TRICYCLE TICKET";
-        public string Description { get; set; } = "ticketing";
-        public decimal Amount { get; set; } = 200.00m;
+        // Modal States
+        private bool _showVerifySuccessSheet;
+        private bool _showErrorSheet;
+        private string _errorMessage;
+
+        public ServiceModel SelectedService { get; set; }
         public string PayerId { get; set; }
-        public string AgentPin { get; set; }
-        public ICommand ProcessPaymentCommand { get; }
+        public string PinInput { get; set; }
 
-        public KekeTaxCollectionPage()
+        public bool IsBusy { get => _isBusy; set { _isBusy = value; OnPropertyChanged(); } }
+        public bool IsVerified { get => _isVerified; set { _isVerified = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotVerified)); } }
+        public bool IsNotVerified => !IsVerified;
+
+        public bool ShowVerifySuccessSheet { get => _showVerifySuccessSheet; set { _showVerifySuccessSheet = value; OnPropertyChanged(); } }
+        public bool ShowErrorSheet { get => _showErrorSheet; set { _showErrorSheet = value; OnPropertyChanged(); } }
+        public string ErrorMessage { get => _errorMessage; set { _errorMessage = value; OnPropertyChanged(); } }
+
+        public ICommand VerifyPayerCommand { get; }
+        public ICommand ProcessPaymentCommand { get; }
+        public ICommand CloseSheetsCommand { get; }
+
+        public KekeTaxCollectionPage(ServiceModel service)
         {
             InitializeComponent();
             _kekeService = new KekeService();
+            SelectedService = service;
             BindingContext = this;
-            ProcessPaymentCommand = new Command(async () => await ProcessPaymentAsync());
+
+            VerifyPayerCommand = new Command(async () => await ExecuteVerifyAsync());
+            ProcessPaymentCommand = new Command(async () => await ExecutePaymentAsync());
+            CloseSheetsCommand = new Command(() => { ShowVerifySuccessSheet = false; ShowErrorSheet = false; });
         }
 
-        private async 
-        Task
-ProcessPaymentAsync()
+        private async Task ExecuteVerifyAsync()
         {
-            if (string.IsNullOrWhiteSpace(PayerId) || string.IsNullOrWhiteSpace(AgentPin))
-            {
-                await DisplayAlert("Validation", "Payer ID and PIN are required.", "OK");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(PayerId)) return;
 
+            IsBusy = true;
             try
             {
-                string agentEmail = MainPage.ValidUserMail ?? "agent@example.com";
                 string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
+                // Verifies the KekeNo against the backend
+                var status = await _kekeService.GetKekeStatusAsync(PayerId.Trim().ToUpper(), concode);
 
-                // Submitting the multipart/form-data request[cite: 2]
-                var response = await _kekeService.SubmitKekeTransactionAsync(
-                    ServiceName, agentEmail, Amount, PayerId.Trim().ToUpper(), AgentPin, concode);
-
-                // RespondCode "00" is success, "06" indicates duplicate or failure[cite: 2]
-                if (response != null && response.RespondCode == "00")
+                if (status != null && (status.Status == "00" || status.Status == "01"))
                 {
-                    await DisplayAlert("Success", response.Message, "OK");
-
-                    // Route to printing SDK here...
-                    await Navigation.PopToRootAsync();
+                    IsVerified = true;
+                    ShowVerifySuccessSheet = true;
                 }
                 else
                 {
-                    await DisplayAlert("Transaction Failed", response?.ResponseMessage ?? "Failed to process payment.", "OK");
+                    ErrorMessage = "Payer ID could not be verified. Please check and try again.";
+                    ShowErrorSheet = true;
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert("System Error", $"An error occurred: {ex.Message}", "OK");
+                ErrorMessage = $"Network Error: {ex.Message}";
+                ShowErrorSheet = true;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private async Task ExecutePaymentAsync()
+        {
+            if (string.IsNullOrWhiteSpace(PinInput) || PinInput.Length != 4)
+            {
+                await DisplayAlert("Validation", "A valid 4-digit PIN is required.", "OK");
+                return;
+            }
+
+            IsBusy = true;
+            try
+            {
+                string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
+                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
+                decimal.TryParse(SelectedService.ServiceAmount, out decimal amount);
+
+                var response = await _kekeService.SubmitKekeTransactionAsync(
+                    SelectedService.ServiceName,
+                    agentEmail,
+                    amount,
+                    PayerId.Trim().ToUpper(),
+                    PinInput,
+                    concode
+                );
+
+                if (response != null && response.RespondCode == "00")
+                {
+                    await DisplayAlert("Payment Successful", response.Message, "OK");
+
+                    // Trigger native ESC/POS thermal printing
+                    await ShopReceiptPrinter.PrintKekeReceiptAsync(
+                        transactionNo: response.TransactionNo ?? $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
+                        vehiclePlateNo: PayerId.Trim().ToUpper(),
+                        serviceName: SelectedService.ServiceName,
+                        amountPaid: amount,
+                        lga: "ZIRS Collection",
+                        agentEmail: agentEmail,
+                        isReprint: false
+                    );
+
+                    await Navigation.PopToRootAsync();
+                }
+                else
+                {
+                    ErrorMessage = response?.ResponseMessage ?? "Insufficient Super Agent wallet balance to carry out this transaction";
+                    ShowErrorSheet = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Transaction Failed: {ex.Message}";
+                ShowErrorSheet = true;
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
     }

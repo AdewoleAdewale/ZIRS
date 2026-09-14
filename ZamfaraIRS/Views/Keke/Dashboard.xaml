@@ -29,18 +29,18 @@
 
                 <!-- Collection Point Cards -->
                 <Grid ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,15,0,0">
-                    <Frame Grid.Column="0" BackgroundColor="#047857" CornerRadius="12" Padding="15" HasShadow="False">
+                    <Frame Grid.Column="0" BackgroundColor="White" CornerRadius="12" Padding="15" HasShadow="False">
                         <StackLayout Spacing="10" HorizontalOptions="Center">
-                            <Image Source="add.png" HeightRequest="30" />
-                            <Label Text="ZAMFARA STATE TRICYCLE COLLECTION" TextColor="White" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center" />
-                            <Label Text="COLLECTION POINT" TextColor="#A7F3D0" FontSize="8" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                            <Image Source="add.png" HeightRequest="20" />
+                            <Label Text="ZAMFARA STATE TRICYCLE COLLECTION" TextColor="#047857" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                            <Label Text="COLLECTION POINT" TextColor="#047857" FontSize="8" FontAttributes="Bold" HorizontalTextAlignment="Center"  Margin="0,0,0,10" />
                         </StackLayout>
                     </Frame>
-                    <Frame Grid.Column="1" BackgroundColor="#047857" CornerRadius="12" Padding="15" HasShadow="False">
+                    <Frame Grid.Column="1" BackgroundColor="White" CornerRadius="12" Padding="15" HasShadow="False">
                         <StackLayout Spacing="10" HorizontalOptions="Center">
-                            <Image Source="add..png" HeightRequest="30" />
-                            <Label Text="ZAMFARA STATE TESTING SUPER AGENT" TextColor="White" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center" />
-                            <Label Text="SUPER AGENT" TextColor="#A7F3D0" FontSize="8" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                            <Image Source="add.png" HeightRequest="20" />
+                            <Label Text="ZAMFARA STATE TESTING SUPER AGENT" TextColor="#047857" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                            <Label Text="SUPER AGENT" TextColor="#047857" FontSize="8" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,0,0,10" />
                         </StackLayout>
                     </Frame>
                 </Grid>
@@ -68,7 +68,7 @@
                                         <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
                                         <Label Text="Make Payment With Services using Body Number" FontSize="9" TextColor="#4B5563" />
                                     </StackLayout>
-                                    <Button Grid.Column="2" Text="VIEW" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding NavServicesCommand}" />
+                                    <Button Grid.Column="2" Text="VIEW" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Clicked="Button_Clicked" />
                                 </Grid>
                             </Frame>
 
@@ -157,7 +157,7 @@
                     <TapGestureRecognizer Command="{Binding LogoutCommand}"/>
                 </Frame.GestureRecognizers>
                 <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
-                    <Label Text="⏻" FontSize="18" TextColor="#DC2626" HorizontalOptions="Center" />
+                    <Image Source="shutdown" HeightRequest="20"  HorizontalOptions="Center" />
                     <Label Text="LOGOUT" FontSize="8" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" />
                 </StackLayout>
             </Frame>

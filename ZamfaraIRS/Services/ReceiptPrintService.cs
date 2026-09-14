@@ -14,8 +14,7 @@ namespace ZamfaraIRS.Services
         // Dedicated Shop Print
         Task<bool> PrintShopReceiptAsync(string shopNo, string marketName, string occupant, decimal amountPaid, decimal balanceRemaining, string transactionRef, string date, string agentEmail, bool isReprint = false);
 
-        // Dedicated Keke Print
-        Task<bool> PrintKekeReceiptAsync(string transactionNo, string vehiclePlateNo, string serviceName, decimal amountPaid, string lga, string agentEmail, bool isReprint = false);
+    
     }
 
     public class ReceiptPrintService : IReceiptPrintService
@@ -88,34 +87,6 @@ namespace ZamfaraIRS.Services
             return true;
         }
 
-        // --- KEKE PAYMENT RECEIPT ---
-        public async Task<bool> PrintKekeReceiptAsync(string transactionNo, string vehiclePlateNo, string serviceName, decimal amountPaid, string lga, string agentEmail, bool isReprint = false)
-        {
-            var printer = GetPrinter();
-            if (printer == null) return false;
-
-            var receipt = new ReceiptData
-            {
-                StoreName = "ZAMFARA STATE INTERNAL REVENUE SERVICE",
-                StoreSubTitle = isReprint ? "KEKE PERMIT (REPRINT)" : "KEKE / TRICYCLE TICKET",
-                ReceiptNumber = transactionNo,
-                AgentName = agentEmail,
-                CollectionPoint = lga,
-                PrintDate = DateTime.Now,
-                AmountPaid = amountPaid,
-                TotalAmount = amountPaid,
-                Items = new List<ReceiptItem>
-                {
-                    new ReceiptItem { Description = serviceName, Amount = amountPaid },
-                    new ReceiptItem { Description = "Vehicle Plate No", SubText = vehiclePlateNo, Amount = 0 }
-                },
-                BarcodeLabel = $"https://zamfara.osoftpay.net/verify?ref={transactionNo}",
-                FooterLine1 = isReprint ? "*** REPRINTED RECEIPT ***" : "Status: APPROVED SUCCESSFUL",
-                FooterLine2 = "POWERED BY OSOFTPAY"
-            };
-
-            await printer.PrintReceiptAsync(receipt, logoAssetName: null);
-            return true;
-        }
+      
     }
 }

@@ -12,7 +12,8 @@ namespace ZamfaraIRS.Services
         Task<KekeStatusResponse> GetKekeStatusAsync(string kekeNo, string concode);
         Task<KekeTransactionResponse> SubmitKekeTransactionAsync(string serviceName, string email, decimal amount, string payerId, string pin, string concode);
         Task<List<KekeHistoryResponseModel>> GetKekeTransactionsAsync(string email, string searchFrom, string searchTo);
-
+         
+        Task<List<ServiceModel>> GetServicesAsync(string email);
     }
 
     public class KekeService : IKekeService
@@ -76,6 +77,14 @@ namespace ZamfaraIRS.Services
             return JsonConvert.DeserializeObject<List<KekeHistoryResponseModel>>(json);
         }
 
+        public async Task<List<ServiceModel>> GetServicesAsync(string email)
+        {
+            var response = await _httpClient.GetAsync($"api/TaskPayers/getservices?Email={Uri.EscapeDataString(email)}");
+            if (!response.IsSuccessStatusCode) return new List<ServiceModel>();
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<ServiceModel>>(json);
+        }
 
     }
 }

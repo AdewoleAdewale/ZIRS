@@ -119,4 +119,20 @@ namespace ZamfaraIRS.Models
             [JsonProperty("dateRecorded")]
             public string DateRecorded { get; set; } // Kept as string to preserve exact API formatting
         }
+
+
+    public class ServiceModel
+    {
+        [JsonProperty("serviceName")]
+        public string ServiceName { get; set; }
+
+        [JsonProperty("serviceDescription")]
+        public string ServiceDescription { get; set; }
+
+        [JsonProperty("serviceAmount")]
+        public string ServiceAmount { get; set; }
+
+        [JsonProperty("merchantNo")]
+        public string MerchantNo { get; set; }
     }
+}

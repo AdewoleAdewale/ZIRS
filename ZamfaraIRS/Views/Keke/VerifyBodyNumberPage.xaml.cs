@@ -13,7 +13,6 @@ namespace ZamfaraIRS.Views.Keke
     public partial class VerifyBodyNumberPage : ContentPage, INotifyPropertyChanged
     {
         private readonly IKekeService _kekeService;
-        private readonly ReceiptPrintService _receiptPrintService = new ReceiptPrintService();
         private string _bodyNumberInput;
         private bool _isBusy;
         private bool _hasResult;
@@ -193,7 +192,7 @@ namespace ZamfaraIRS.Views.Keke
             string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
 
             // Print Keke receipt using the existing SDK methodology implemented previously[cite: 6]
-            bool success = await _receiptPrintService.PrintKekeReceiptAsync(
+            bool success = await ShopReceiptPrinter.PrintKekeReceiptAsync(
                 transactionNo: _transactionNo ?? $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
                 vehiclePlateNo: VerificationResult.KekeNo,
                 serviceName: VerificationResult.ServiceName,

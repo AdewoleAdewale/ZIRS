@@ -10,7 +10,7 @@
 
             <!-- Header -->
             <StackLayout HorizontalOptions="Center" Spacing="5">
-                <Image Source="zamfara_seal.png" HeightRequest="60" WidthRequest="60" HorizontalOptions="Center" />
+                <Image Source="zirs.png" HeightRequest="60" WidthRequest="60" HorizontalOptions="Center" />
                 <Label Text="KEKE STATUS CHECKER" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
                 <Label Text="Verify your tricycle payment status instantly" TextColor="#A7F3D0" FontSize="12" HorizontalOptions="Center" />
             </StackLayout>

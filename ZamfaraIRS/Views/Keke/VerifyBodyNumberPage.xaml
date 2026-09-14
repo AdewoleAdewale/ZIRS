@@ -122,7 +122,7 @@
 
         <!-- ERROR POPUP (33.jpeg) -->
         <ContentView IsVisible="{Binding ShowErrorSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
-            <StackLayout VerticalOptions="Center" HorizontalOptions="Center" BackgroundColor="White" Padding="25" Spacing="15" CornerRadius="16" WidthRequest="300">
+            <StackLayout VerticalOptions="Center" HorizontalOptions="Center" BackgroundColor="White" Padding="25" Spacing="15"  WidthRequest="300">
                 <Frame BackgroundColor="#EF4444" HeightRequest="60" WidthRequest="60" CornerRadius="30" HorizontalOptions="Center" HasShadow="False" Padding="0">
                     <Label Text="✕" FontSize="28" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Frame>
@@ -139,7 +139,8 @@
 
         <!-- SUCCESS POPUP -->
         <ContentView IsVisible="{Binding ShowSuccessSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
-            <StackLayout VerticalOptions="Center" HorizontalOptions="Center" BackgroundColor="White" Padding="25" Spacing="15" CornerRadius="16" WidthRequest="300">
+            
+            <StackLayout VerticalOptions="Center" HorizontalOptions="Center" BackgroundColor="White" Padding="25" Spacing="15"  WidthRequest="300">
                 <Frame BackgroundColor="#10B981" HeightRequest="60" WidthRequest="60" CornerRadius="30" HorizontalOptions="Center" HasShadow="False" Padding="0">
                     <Label Text="✓" FontSize="28" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Frame>
