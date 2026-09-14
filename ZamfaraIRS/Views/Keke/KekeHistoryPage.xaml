@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Keke.KekeHistoryPage"
+             BackgroundColor="#F3F4F6"
+             NavigationPage.HasNavigationBar="False">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <!-- Header Section -->
+        <StackLayout Grid.Row="0" BackgroundColor="#064E3B" Padding="20,40,20,30" Spacing="5">
+            <Label Text="ZIRS" TextColor="White" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center" />
+            <Label Text="TRANSACTION HISTORY" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
+            <Label Text="Track and manage your payment records" TextColor="#A7F3D0" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" />
+        </StackLayout>
+
+        <!-- Search Card & Results -->
+        <ScrollView Grid.Row="1" Margin="0,-20,0,0">
+            <StackLayout Padding="20" Spacing="20">
+
+                <!-- Date Range Selector Card -->
+                <Frame CornerRadius="16" BackgroundColor="White" Padding="20" HasShadow="True" BorderColor="#E5E7EB">
+                    <StackLayout Spacing="20">
+
+                        <StackLayout Orientation="Horizontal" Spacing="10">
+                            <Image Source="zamfara_seal.png" HeightRequest="30" WidthRequest="30" />
+                            <Label Text="SELECT DATE RANGE" FontAttributes="Bold" FontSize="14" TextColor="#111827" VerticalOptions="Center" />
+                        </StackLayout>
+
+                        <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" />
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
+                            <!-- From Date -->
+                            <StackLayout Grid.Column="0" Spacing="5">
+                                <Label Text="From Date" FontAttributes="Bold" FontSize="12" TextColor="#374151" />
+                                <Frame Padding="10,0" CornerRadius="8" BackgroundColor="#F9FAFB" HasShadow="False" BorderColor="#D1D5DB" HeightRequest="45">
+                                    <DatePicker Date="{Binding StartDate}" Format="MMM dd, yyyy" FontSize="13" TextColor="#111827" FontAttributes="Bold" />
+                                </Frame>
+                            </StackLayout>
+
+                            <!-- To Date -->
+                            <StackLayout Grid.Column="1" Spacing="5">
+                                <Label Text="To Date" FontAttributes="Bold" FontSize="12" TextColor="#374151" />
+                                <Frame Padding="10,0" CornerRadius="8" BackgroundColor="#F9FAFB" HasShadow="False" BorderColor="#D1D5DB" HeightRequest="45">
+                                    <DatePicker Date="{Binding EndDate}" Format="MMM dd, yyyy" FontSize="13" TextColor="#111827" FontAttributes="Bold" />
+                                </Frame>
+                            </StackLayout>
+                        </Grid>
+
+                        <Button Text="🔍 SEARCH TRANSACTIONS" 
+                                Command="{Binding SearchTransactionsCommand}" 
+                                BackgroundColor="#064E3B" 
+                                TextColor="White" 
+                                CornerRadius="12" 
+                                HeightRequest="50" 
+                                FontAttributes="Bold" 
+                                Margin="0,10,0,0" />
+                    </StackLayout>
+                </Frame>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />
+
+                <!-- Placeholder for Results List -->
+                <!-- The CollectionView will populate here once the history endpoint is mapped -->
+                <CollectionView ItemsSource="{Binding Transactions}" IsVisible="{Binding HasResults}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,5" Padding="15" CornerRadius="8" BackgroundColor="White" HasShadow="False" BorderColor="#E5E7EB">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding Payer, StringFormat='Keke No: {0}'}" FontAttributes="Bold" FontSize="13" TextColor="#111827"/>
+                                        <Label Text="{Binding DateRecorded, StringFormat='{0:dd MMM yyyy hh:mm tt}'}" FontSize="11" TextColor="Gray" />
+                                    </StackLayout>
+                                    <Label Grid.Column="1" Text="{Binding Amount, StringFormat='₦{0:N2}'}" TextColor="#059669" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label Text="No transactions found for this date range." 
+                       IsVisible="{Binding ShowEmptyState}" 
+                       TextColor="Gray" 
+                       HorizontalOptions="Center" 
+                       Margin="0,20,0,0" />
+            </StackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

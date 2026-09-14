@@ -1,12 +1,166 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="ZamfaraIRS.Views.Keke.Dashboard">
-    <ContentPage.Content>
-        <StackLayout>
-            <Label Text="Welcome to Xamarin.Forms!"
-                VerticalOptions="CenterAndExpand" 
-                HorizontalOptions="CenterAndExpand" />
+             x:Class="ZamfaraIRS.Views.Keke.Dashboard"
+             BackgroundColor="#064E3B"
+             NavigationPage.HasNavigationBar="False">
+
+    <Grid>
+        <StackLayout Spacing="0">
+            <!-- Top Header -->
+            <StackLayout Padding="20, 40, 20, 20" Spacing="10">
+                <Label Text="ZAMFARA INTERNAL REVENUE SERVICE" TextColor="White" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" />
+
+                <Grid ColumnDefinitions="*, Auto" Margin="0,15,0,0">
+                    <StackLayout Grid.Column="0" VerticalOptions="Center">
+                        <Label Text="Welcome back," TextColor="#A7F3D0" FontSize="12" />
+                        <Label Text="{Binding AgentName}" TextColor="White" FontSize="18" FontAttributes="Bold" />
+                        <Label Text="{Binding LastLogin, StringFormat='Last login: {0}'}" TextColor="#D1FAE5" FontSize="10" />
+                    </StackLayout>
+                    <StackLayout Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center">
+                        <Image Source="zamfara_seal.png" HeightRequest="50" WidthRequest="50" />
+                        <Frame BackgroundColor="#DC2626" CornerRadius="10" Padding="8,4" HasShadow="False" HorizontalOptions="Center" Margin="0,5,0,0">
+                            <Label Text="● Online" TextColor="White" FontSize="9" FontAttributes="Bold" />
+                        </Frame>
+                    </StackLayout>
+                </Grid>
+
+                <Label Text="{Binding CurrentDate}" TextColor="White" FontSize="11" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,10,0,0" />
+
+                <!-- Collection Point Cards -->
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,15,0,0">
+                    <Frame Grid.Column="0" BackgroundColor="#047857" CornerRadius="12" Padding="15" HasShadow="False">
+                        <StackLayout Spacing="10" HorizontalOptions="Center">
+                            <Image Source="add_icon.png" HeightRequest="30" />
+                            <Label Text="ZAMFARA STATE TRICYCLE COLLECTION" TextColor="White" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                            <Label Text="COLLECTION POINT" TextColor="#A7F3D0" FontSize="8" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        </StackLayout>
+                    </Frame>
+                    <Frame Grid.Column="1" BackgroundColor="#047857" CornerRadius="12" Padding="15" HasShadow="False">
+                        <StackLayout Spacing="10" HorizontalOptions="Center">
+                            <Image Source="add_icon.png" HeightRequest="30" />
+                            <Label Text="ZAMFARA STATE TESTING SUPER AGENT" TextColor="White" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                            <Label Text="SUPER AGENT" TextColor="#A7F3D0" FontSize="8" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        </StackLayout>
+                    </Frame>
+                </Grid>
+            </StackLayout>
+
+            <!-- Bottom Sheet: Quick Actions -->
+            <Frame BackgroundColor="#F9FAFB" CornerRadius="24" Padding="20,20,20,0" HasShadow="False" VerticalOptions="FillAndExpand">
+                <Grid RowDefinitions="Auto, *">
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,15">
+                        <Label Grid.Column="0" Text="QUICK ACTIONS" FontSize="14" FontAttributes="Bold" TextColor="#1F2937" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="VIEW ALL" FontSize="11" FontAttributes="Bold" TextColor="#064E3B" VerticalOptions="Center" />
+                    </Grid>
+
+                    <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+                        <StackLayout Spacing="12" Padding="0,0,0,100">
+                            <!-- Services -->
+                            <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding NavServicesCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="4, *, Auto">
+                                    <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
+                                    <StackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
+                                        <Label Text="SERVICES" FontSize="13" FontAttributes="Bold" TextColor="#064E3B" />
+                                        <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
+                                        <Label Text="Make Payment With Services using Body Number" FontSize="9" TextColor="#4B5563" />
+                                    </StackLayout>
+                                    <Button Grid.Column="2" Text="VIEW" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding NavServicesCommand}" />
+                                </Grid>
+                            </Frame>
+
+                            <!-- Check Status -->
+                            <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding NavCheckStatusCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="4, *, Auto">
+                                    <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
+                                    <StackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
+                                        <Label Text="CHECK STATUS" FontSize="13" FontAttributes="Bold" TextColor="#064E3B" />
+                                        <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
+                                        <Label Text="Check Keke status using Keke number" FontSize="9" TextColor="#4B5563" />
+                                    </StackLayout>
+                                    <Button Grid.Column="2" Text="STATUS" BackgroundColor="#059669" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding NavCheckStatusCommand}" />
+                                </Grid>
+                            </Frame>
+
+                            <!-- Body Number -->
+                            <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding NavBodyNumberCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="4, *, Auto">
+                                    <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
+                                    <StackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
+                                        <Label Text="BODY NUMBER" FontSize="13" FontAttributes="Bold" TextColor="#064E3B" />
+                                        <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
+                                        <Label Text="Ensure your internet connection is stable" FontSize="9" TextColor="#4B5563" />
+                                    </StackLayout>
+                                    <Button Grid.Column="2" Text="VERIFY" BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding NavBodyNumberCommand}" />
+                                </Grid>
+                            </Frame>
+
+                            <!-- Agent History -->
+                            <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding NavAgentHistoryCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="4, *, Auto">
+                                    <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
+                                    <StackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
+                                        <Label Text="AGENT HISTORY" FontSize="13" FontAttributes="Bold" TextColor="#064E3B" />
+                                        <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
+                                        <Label Text="Search transactions by date range" FontSize="9" TextColor="#4B5563" />
+                                    </StackLayout>
+                                    <Button Grid.Column="2" Text="HISTORY" BackgroundColor="#059669" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding NavAgentHistoryCommand}" />
+                                </Grid>
+                            </Frame>
+
+                            <!-- Settings -->
+                            <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenSettingsCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="4, *, Auto">
+                                    <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
+                                    <StackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
+                                        <Label Text="SETTING" FontSize="13" FontAttributes="Bold" TextColor="#064E3B" />
+                                        <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
+                                        <Label Text="Access additional settings and tools" FontSize="9" TextColor="#4B5563" />
+                                    </StackLayout>
+                                    <Button Grid.Column="2" Text="OPTIONS" BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding OpenSettingsCommand}" />
+                                </Grid>
+                            </Frame>
+                        </StackLayout>
+                    </ScrollView>
+                </Grid>
+            </Frame>
         </StackLayout>
-    </ContentPage.Content>
+
+        <!-- Floating Action Buttons (Bottom Right) -->
+        <StackLayout VerticalOptions="End" HorizontalOptions="End" Margin="0,0,20,30" Spacing="15">
+            <Frame BackgroundColor="#064E3B" CornerRadius="30" HeightRequest="60" WidthRequest="60" Padding="0" HasShadow="True">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding TestPrintCommand}"/>
+                </Frame.GestureRecognizers>
+                <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
+                    <Label Text="🖨️" FontSize="18" HorizontalOptions="Center" />
+                    <Label Text="PRINT" FontSize="8" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" />
+                </StackLayout>
+            </Frame>
+            <Frame BackgroundColor="#064E3B" CornerRadius="30" HeightRequest="60" WidthRequest="60" Padding="0" HasShadow="True">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding LogoutCommand}"/>
+                </Frame.GestureRecognizers>
+                <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
+                    <Label Text="⏻" FontSize="18" TextColor="#DC2626" HorizontalOptions="Center" />
+                    <Label Text="LOGOUT" FontSize="8" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" />
+                </StackLayout>
+            </Frame>
+        </StackLayout>
+    </Grid>
 </ContentPage>

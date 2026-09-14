@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZamfaraIRS.Views.Keke.KekeTaxCollectionPage">
+    <ContentPage.Content>
+        <StackLayout>
+            <!-- Core Data Bindings -->
+            <Entry Text="{Binding ServiceName}" IsReadOnly="True" />
+            <Entry Text="{Binding Description}" IsReadOnly="True" />
+            <Entry Text="{Binding Amount, StringFormat='₦{0:N2}'}" IsReadOnly="True" />
+            <Entry Text="{Binding PayerId}" Placeholder="Enter Payer ID or Body Number" />
+            <Entry Text="{Binding AgentPin}" Placeholder="Enter 4-digit PIN" IsPassword="True" MaxLength="4" Keyboard="Numeric" />
+
+            <Button Text="PROCESS PAYMENT" Command="{Binding ProcessPaymentCommand}" BackgroundColor="#064E3B" TextColor="White" />
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
