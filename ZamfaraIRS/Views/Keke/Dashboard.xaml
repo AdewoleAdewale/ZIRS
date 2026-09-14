@@ -18,7 +18,7 @@
                         <Label Text="{Binding LastLogin, StringFormat='Last login: {0}'}" TextColor="#D1FAE5" FontSize="10" />
                     </StackLayout>
                     <StackLayout Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center">
-                        <Image Source="zamfara_seal.png" HeightRequest="50" WidthRequest="50" />
+                        <Image Source="zirs.png" HeightRequest="50" WidthRequest="50" />
                         <Frame BackgroundColor="#DC2626" CornerRadius="10" Padding="8,4" HasShadow="False" HorizontalOptions="Center" Margin="0,5,0,0">
                             <Label Text="● Online" TextColor="White" FontSize="9" FontAttributes="Bold" />
                         </Frame>
@@ -31,14 +31,14 @@
                 <Grid ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,15,0,0">
                     <Frame Grid.Column="0" BackgroundColor="#047857" CornerRadius="12" Padding="15" HasShadow="False">
                         <StackLayout Spacing="10" HorizontalOptions="Center">
-                            <Image Source="add_icon.png" HeightRequest="30" />
+                            <Image Source="add.png" HeightRequest="30" />
                             <Label Text="ZAMFARA STATE TRICYCLE COLLECTION" TextColor="White" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center" />
                             <Label Text="COLLECTION POINT" TextColor="#A7F3D0" FontSize="8" FontAttributes="Bold" HorizontalTextAlignment="Center" />
                         </StackLayout>
                     </Frame>
                     <Frame Grid.Column="1" BackgroundColor="#047857" CornerRadius="12" Padding="15" HasShadow="False">
                         <StackLayout Spacing="10" HorizontalOptions="Center">
-                            <Image Source="add_icon.png" HeightRequest="30" />
+                            <Image Source="add..png" HeightRequest="30" />
                             <Label Text="ZAMFARA STATE TESTING SUPER AGENT" TextColor="White" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="Center" />
                             <Label Text="SUPER AGENT" TextColor="#A7F3D0" FontSize="8" FontAttributes="Bold" HorizontalTextAlignment="Center" />
                         </StackLayout>

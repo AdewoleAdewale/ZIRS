@@ -97,4 +97,26 @@ namespace ZamfaraIRS.Models
         [JsonProperty("amount")]
         public decimal Amount { get; set; }
     }
-}
+
+ 
+        public class KekeHistoryResponseModel
+        {
+            [JsonProperty("businessName")]
+            public string BusinessName { get; set; }
+
+            [JsonProperty("serviceName")]
+            public string ServiceName { get; set; }
+
+            [JsonProperty("payerId")]
+            public string PayerId { get; set; }
+
+            [JsonProperty("transactionId")]
+            public string TransactionId { get; set; }
+
+            [JsonProperty("amount")]
+            public decimal Amount { get; set; } // Newtonsoft automatically converts the string "0.00" to decimal
+
+            [JsonProperty("dateRecorded")]
+            public string DateRecorded { get; set; } // Kept as string to preserve exact API formatting
+        }
+    }

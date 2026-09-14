@@ -19,8 +19,8 @@ namespace ZamfaraIRS.Views.Keke
     {
         private bool _isNavigating = false;
 
-    public string AgentName { get; set; } = "TEST ACCOUNT";
-    public string LastLogin { get; set; } = "Sep 14, 2026";
+    public string AgentName { get; set; } = MainPage.Name;
+    public string LastLogin { get; set; } = DateTime.Now.ToString();
     public string CurrentDate { get; set; }
 
     public ICommand NavServicesCommand { get; }

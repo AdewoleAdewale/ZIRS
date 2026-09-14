@@ -14,33 +14,30 @@
             <Label Text="Track and manage your payment records" TextColor="#A7F3D0" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" />
         </StackLayout>
 
-        <!-- Search Card & Results -->
+        <!-- Main Scrollable Content -->
         <ScrollView Grid.Row="1" Margin="0,-20,0,0">
-            <StackLayout Padding="20" Spacing="20">
+            <StackLayout Padding="20" Spacing="15">
 
                 <!-- Date Range Selector Card -->
                 <Frame CornerRadius="16" BackgroundColor="White" Padding="20" HasShadow="True" BorderColor="#E5E7EB">
-                    <StackLayout Spacing="20">
-
+                    <StackLayout Spacing="15">
                         <StackLayout Orientation="Horizontal" Spacing="10">
-                            <Image Source="zamfara_seal.png" HeightRequest="30" WidthRequest="30" />
-                            <Label Text="SELECT DATE RANGE" FontAttributes="Bold" FontSize="14" TextColor="#111827" VerticalOptions="Center" />
+                            <Image Source="zamfara_seal.png" HeightRequest="25" WidthRequest="25" />
+                            <Label Text="SELECT DATE RANGE" FontAttributes="Bold" FontSize="13" TextColor="#111827" VerticalOptions="Center" />
                         </StackLayout>
 
                         <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" />
 
                         <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
-                            <!-- From Date -->
                             <StackLayout Grid.Column="0" Spacing="5">
-                                <Label Text="From Date" FontAttributes="Bold" FontSize="12" TextColor="#374151" />
+                                <Label Text="From Date" FontAttributes="Bold" FontSize="11" TextColor="#374151" />
                                 <Frame Padding="10,0" CornerRadius="8" BackgroundColor="#F9FAFB" HasShadow="False" BorderColor="#D1D5DB" HeightRequest="45">
                                     <DatePicker Date="{Binding StartDate}" Format="MMM dd, yyyy" FontSize="13" TextColor="#111827" FontAttributes="Bold" />
                                 </Frame>
                             </StackLayout>
 
-                            <!-- To Date -->
                             <StackLayout Grid.Column="1" Spacing="5">
-                                <Label Text="To Date" FontAttributes="Bold" FontSize="12" TextColor="#374151" />
+                                <Label Text="To Date" FontAttributes="Bold" FontSize="11" TextColor="#374151" />
                                 <Frame Padding="10,0" CornerRadius="8" BackgroundColor="#F9FAFB" HasShadow="False" BorderColor="#D1D5DB" HeightRequest="45">
                                     <DatePicker Date="{Binding EndDate}" Format="MMM dd, yyyy" FontSize="13" TextColor="#111827" FontAttributes="Bold" />
                                 </Frame>
@@ -54,25 +51,80 @@
                                 CornerRadius="12" 
                                 HeightRequest="50" 
                                 FontAttributes="Bold" 
-                                Margin="0,10,0,0" />
+                                Margin="0,5,0,0" />
                     </StackLayout>
                 </Frame>
 
                 <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#064E3B" HorizontalOptions="Center" />
 
-                <!-- Placeholder for Results List -->
-                <!-- The CollectionView will populate here once the history endpoint is mapped -->
+                <!-- Transaction Summary Card -->
+                <Frame IsVisible="{Binding HasResults}" CornerRadius="12" BackgroundColor="#DCFCE7" Padding="15" HasShadow="False" BorderColor="#A7F3D0">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <Image Grid.Column="0" Source="chart_icon.png" HeightRequest="30" WidthRequest="30" VerticalOptions="Center"/>
+                        <StackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center" Margin="10,0,0,0">
+                            <Label Text="{Binding SummaryText}" FontAttributes="Bold" FontSize="13" TextColor="#065F46" />
+                            <Label Text="Transaction Summary" FontSize="10" TextColor="#047857" />
+                        </StackLayout>
+                        <Label Grid.Column="2" Text="✓" FontSize="20" FontAttributes="Bold" TextColor="#059669" VerticalOptions="Center"/>
+                    </Grid>
+                </Frame>
+
+                <!-- Transaction Records Header -->
+                <Frame IsVisible="{Binding HasResults}" BackgroundColor="#064E3B" CornerRadius="12" Padding="15,10" HasShadow="False">
+                    <StackLayout Orientation="Horizontal" Spacing="10">
+                        <Image Source="clipboard_icon.png" HeightRequest="20" WidthRequest="20" />
+                        <Label Text="TRANSACTION RECORDS" FontAttributes="Bold" FontSize="12" TextColor="White" VerticalOptions="Center" />
+                    </StackLayout>
+                </Frame>
+
+                <!-- Records List -->
                 <CollectionView ItemsSource="{Binding Transactions}" IsVisible="{Binding HasResults}">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Frame Margin="0,5" Padding="15" CornerRadius="8" BackgroundColor="White" HasShadow="False" BorderColor="#E5E7EB">
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <StackLayout Grid.Column="0" Spacing="2">
-                                        <Label Text="{Binding Payer, StringFormat='Keke No: {0}'}" FontAttributes="Bold" FontSize="13" TextColor="#111827"/>
-                                        <Label Text="{Binding DateRecorded, StringFormat='{0:dd MMM yyyy hh:mm tt}'}" FontSize="11" TextColor="Gray" />
-                                    </StackLayout>
-                                    <Label Grid.Column="1" Text="{Binding Amount, StringFormat='₦{0:N2}'}" TextColor="#059669" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" />
-                                </Grid>
+                            <Frame Margin="0,0,0,15" Padding="15" CornerRadius="12" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB">
+                                <StackLayout Spacing="12">
+
+                                    <!-- Header Row -->
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <Label Grid.Column="0" Text="{Binding ServiceName}" FontAttributes="Bold" FontSize="13" TextColor="#064E3B" VerticalOptions="Center" />
+                                        <Frame Grid.Column="1" BackgroundColor="#ECFDF5" CornerRadius="6" Padding="8,4" HasShadow="False">
+                                            <Label Text="✓ Paid" FontSize="10" FontAttributes="Bold" TextColor="#059669" />
+                                        </Frame>
+                                    </Grid>
+
+                                    <!-- Amount & Branding Row -->
+                                    <Grid ColumnDefinitions="Auto, *">
+                                        <StackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                                            <Image Source="zamfara_seal.png" HeightRequest="40" WidthRequest="40" />
+                                            <Label Text="ZIRS" FontSize="9" FontAttributes="Bold" TextColor="#059669" HorizontalOptions="Center" />
+                                        </StackLayout>
+
+                                        <Frame Grid.Column="1" BackgroundColor="#FFFBEB" CornerRadius="8" Padding="15,10" HasShadow="False" Margin="15,0,0,0">
+                                            <StackLayout Orientation="Horizontal" Spacing="10" HorizontalOptions="Center">
+                                                <Label Text="⇅" FontSize="18" TextColor="#D97706" FontAttributes="Bold" VerticalOptions="Center"/>
+                                                <Label Text="{Binding Amount, StringFormat='₦{0:N2}'}" FontSize="18" FontAttributes="Bold" TextColor="#DC2626" VerticalOptions="Center" />
+                                            </StackLayout>
+                                        </Frame>
+                                    </Grid>
+
+                                    <BoxView HeightRequest="1" BackgroundColor="#F3F4F6" Margin="0,5" />
+
+                                    <!-- Details Grid -->
+                                    <Grid RowDefinitions="Auto, Auto, Auto, Auto" ColumnDefinitions="80, *" RowSpacing="8">
+                                        <Label Grid.Row="0" Grid.Column="0" Text="Trans ID:" FontSize="11" TextColor="Gray" />
+                                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding TransactionNo}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />
+
+                                        <Label Grid.Row="1" Grid.Column="0" Text="Business:" FontSize="11" TextColor="Gray" />
+                                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding Business}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />
+
+                                        <Label Grid.Row="2" Grid.Column="0" Text="Payer ID:" FontSize="11" TextColor="Gray" />
+                                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding PayerId}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />
+
+                                        <Label Grid.Row="3" Grid.Column="0" Text="Date Time:" FontSize="11" TextColor="Gray" />
+                                        <Label Grid.Row="3" Grid.Column="1" Text="{Binding DateRecorded, StringFormat='{0:MMM dd, yyyy h:mm tt}'}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />
+                                    </Grid>
+
+                                </StackLayout>
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

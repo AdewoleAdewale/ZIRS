@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using ZamfaraIRS.Models;
 
 namespace ZamfaraIRS.Services
@@ -10,6 +11,8 @@ namespace ZamfaraIRS.Services
     {
         Task<KekeStatusResponse> GetKekeStatusAsync(string kekeNo, string concode);
         Task<KekeTransactionResponse> SubmitKekeTransactionAsync(string serviceName, string email, decimal amount, string payerId, string pin, string concode);
+        Task<List<KekeHistoryResponseModel>> GetKekeTransactionsAsync(string email, string searchFrom, string searchTo);
+
     }
 
     public class KekeService : IKekeService
@@ -59,5 +62,20 @@ namespace ZamfaraIRS.Services
                 return JsonConvert.DeserializeObject<KekeTransactionResponse>(json);
             }
         }
+
+
+        public async Task<List<KekeHistoryResponseModel>> GetKekeTransactionsAsync(string email, string searchFrom, string searchTo)
+        {
+            // Ensure the date format matches the API's expected format (dd-MM-yyyy)
+            string url = $"api/TaskPayers/gettransaction?Email={Uri.EscapeDataString(email)}&SearchFrom={searchFrom}&SearchTo={searchTo}";
+            var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode) return new List<KekeHistoryResponseModel>();
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<KekeHistoryResponseModel>>(json);
+        }
+
+
     }
 }
