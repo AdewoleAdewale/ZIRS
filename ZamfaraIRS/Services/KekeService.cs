@@ -28,7 +28,7 @@ namespace ZamfaraIRS.Services
         public async Task<KekeStatusResponse> GetKekeStatusAsync(string kekeNo, string concode)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"api/KekeTransactions/GetKekeCount?KekeNo={Uri.EscapeDataString(kekeNo)}");
-            request.Headers.Add("Concode", concode); // Must match SuperAgent.NewMerchantNo
+            request.Headers.Add("Concode", concode); 
 
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode) return null;
