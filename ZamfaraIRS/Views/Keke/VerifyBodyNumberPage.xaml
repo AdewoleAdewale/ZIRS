@@ -20,7 +20,7 @@
                     <Frame Padding="15,0" CornerRadius="8" BackgroundColor="#F9FAFB" HasShadow="False" BorderColor="#E5E7EB" HeightRequest="50">
                         <Entry Text="{Binding BodyNumberInput}" Placeholder="e.g. Gus202" FontSize="14" FontAttributes="Bold" TextColor="#111827" TextTransform="Uppercase" />
                     </Frame>
-                    <Button Text="VERIFY BODY NUMBER" Command="{Binding VerifyCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" />
+                    <Button Text="VERIFY BODY NUMBER" Clicked="Button_Clicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" />
                 </StackLayout>
             </Frame>
 
@@ -67,7 +67,7 @@
                         </StackLayout>
                     </Grid>
 
-                    <Button Text="MAKE PAYMENT" Command="{Binding OpenPaymentSheetCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" Margin="0,15,0,0" />
+                    <Button Text="MAKE PAYMENT" Command="{Binding OpenPaymentSheetCommand}" Clicked="Button_Clicked_1" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" Margin="0,15,0,0" />
                 </StackLayout>
             </Frame>
         </StackLayout>
@@ -148,7 +148,7 @@
                 <Label Text="PAYMENT SUCCESSFUL" FontSize="16" FontAttributes="Bold" TextColor="#10B981" HorizontalOptions="Center" />
                 <Label Text="{Binding SuccessMessage}" FontSize="12" TextColor="#111827" HorizontalTextAlignment="Center" FontAttributes="Bold" Margin="0,0,0,10" />
 
-                <Button Text="PRINT RECEIPT" Command="{Binding PrintReceiptCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" />
+                <Button Text="PRINT RECEIPT" Clicked="Button_Clicked_2" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" />
                 <Button Text="DONE" Command="{Binding CloseSheetsCommand}" BackgroundColor="#F3F4F6" TextColor="#6B7280" CornerRadius="8" FontAttributes="Bold" />
             </StackLayout>
         </ContentView>

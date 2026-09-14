@@ -45,7 +45,7 @@
                         </Grid>
 
                         <Button Text=" SEARCH TRANSACTIONS" 
-                                Command="{Binding SearchTransactionsCommand}" 
+                                Clicked="Button_Clicked"
                                 BackgroundColor="#064E3B" 
                                 TextColor="White" 
                                 CornerRadius="12" 

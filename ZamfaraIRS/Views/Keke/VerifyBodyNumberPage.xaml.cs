@@ -96,7 +96,7 @@ namespace ZamfaraIRS.Views.Keke
             try
             {
                 // Concode is mandatory for the GetKekeCount lookup[cite: 2]
-                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
+                string concode = "9LF299r0afwIXMN";
                 var result = await _kekeService.GetKekeStatusAsync(BodyNumberInput.Trim().ToUpper(), concode);
 
                 if (result != null && (result.Status == "00" || result.Status == "01")) // 00 = Not owing, 01 = Owing[cite: 2]
@@ -217,6 +217,21 @@ namespace ZamfaraIRS.Views.Keke
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private async void Button_Clicked(object sender, EventArgs e)
+        {
+            await ExecuteVerifyAsync();
+        }
+
+        private async void Button_Clicked_1(object sender, EventArgs e)
+        {
+            await ExecutePaymentAsync();
+        }
+
+        private async void Button_Clicked_2(object sender, EventArgs e)
+        {
+            await ExecutePrintReceiptAsync();
         }
     }
 }

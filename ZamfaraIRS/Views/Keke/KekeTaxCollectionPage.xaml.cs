@@ -53,7 +53,7 @@ namespace ZamfaraIRS.Views.Keke
             IsBusy = true;
             try
             {
-                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
+                string concode = "9LF299r0afwIXMN";
                 // Verifies the KekeNo against the backend
                 var status = await _kekeService.GetKekeStatusAsync(PayerId.Trim().ToUpper(), concode);
 
@@ -135,6 +135,11 @@ namespace ZamfaraIRS.Views.Keke
             {
                 IsBusy = false;
             }
+        }
+
+        private async void Button_Clicked(object sender, EventArgs e)
+        {
+            await ExecutePaymentAsync();
         }
     }
 }

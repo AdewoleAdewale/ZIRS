@@ -57,8 +57,9 @@ namespace ZamfaraIRS.Views.Keke
 
             try
             {
+
                 // Requires the Concode (SuperAgent.NewMerchantNo)[cite: 2]
-                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
+                string concode = "9LF299r0afwIXMN";
 
                 // Server-side uppercases and strips spaces, we do it here for good measure[cite: 2]
                 var response = await _kekeService.GetKekeStatusAsync(KekeNumber.Trim().ToUpper(), concode);
@@ -85,6 +86,11 @@ namespace ZamfaraIRS.Views.Keke
             {
                 IsBusy = false;
             }
+        }
+
+        private async void Button_Clicked(object sender, EventArgs e)
+        {
+           await ExecuteCheckStatusAsync();
         }
     }
 }

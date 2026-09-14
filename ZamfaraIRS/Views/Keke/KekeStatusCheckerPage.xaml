@@ -5,8 +5,8 @@
              BackgroundColor="#064E3B"
              NavigationPage.HasNavigationBar="False">
 
-    <ScrollView VerticalScrollBarVisibility="Never">
-        <StackLayout Spacing="20" Padding="20,40,20,20">
+    <ScrollView VerticalScrollBarVisibility="Always">
+        <StackLayout Spacing="10" Padding="20,40,20,20">
 
             <!-- Header -->
             <StackLayout HorizontalOptions="Center" Spacing="5">
@@ -28,7 +28,7 @@
                     <Label Text="Enter 3-20 alphanumeric characters" FontSize="10" TextColor="#6B7280" />
 
                     <Button Text="GET KEKE PAYMENT STATUS" 
-                            Command="{Binding CheckStatusCommand}" 
+                           Clicked="Button_Clicked"
                             BackgroundColor="#064E3B" 
                             TextColor="White" 
                             CornerRadius="8" 

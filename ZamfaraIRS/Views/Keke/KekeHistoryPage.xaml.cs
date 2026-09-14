@@ -80,6 +80,11 @@ namespace ZamfaraIRS.Views.Keke
             }
         }
 
+        private async void Button_Clicked(object sender, EventArgs e)
+        {
+            await LoadHistoryAsync();
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

@@ -59,7 +59,7 @@
                             <!-- Services -->
                             <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
                                 <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding NavServicesCommand}"/>
+                                    <TapGestureRecognizer Tapped="Button_Clicked"/>
                                 </Frame.GestureRecognizers>
                                 <Grid ColumnDefinitions="4, *, Auto">
                                     <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
@@ -75,7 +75,7 @@
                             <!-- Check Status -->
                             <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
                                 <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding NavCheckStatusCommand}"/>
+                                    <TapGestureRecognizer Tapped="Button_Clicked_1"/>
                                 </Frame.GestureRecognizers>
                                 <Grid ColumnDefinitions="4, *, Auto">
                                     <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
@@ -84,14 +84,14 @@
                                         <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
                                         <Label Text="Check Keke status using Keke number" FontSize="9" TextColor="#4B5563" />
                                     </StackLayout>
-                                    <Button Grid.Column="2" Text="STATUS" BackgroundColor="#059669" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding NavCheckStatusCommand}" />
+                                    <Button Grid.Column="2" Text="STATUS" BackgroundColor="#059669" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Clicked="Button_Clicked_1"/>
                                 </Grid>
                             </Frame>
 
                             <!-- Body Number -->
                             <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
                                 <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding NavBodyNumberCommand}"/>
+                                    <TapGestureRecognizer Tapped="Button_Clicked_2"/>
                                 </Frame.GestureRecognizers>
                                 <Grid ColumnDefinitions="4, *, Auto">
                                     <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
@@ -100,14 +100,14 @@
                                         <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
                                         <Label Text="Ensure your internet connection is stable" FontSize="9" TextColor="#4B5563" />
                                     </StackLayout>
-                                    <Button Grid.Column="2" Text="VERIFY" BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding NavBodyNumberCommand}" />
+                                    <Button Grid.Column="2" Text="VERIFY" BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Clicked="Button_Clicked_2"/>
                                 </Grid>
                             </Frame>
 
                             <!-- Agent History -->
                             <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
                                 <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding NavAgentHistoryCommand}"/>
+                                    <TapGestureRecognizer Tapped="Button_Clicked_3"/>
                                 </Frame.GestureRecognizers>
                                 <Grid ColumnDefinitions="4, *, Auto">
                                     <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
@@ -116,15 +116,13 @@
                                         <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
                                         <Label Text="Search transactions by date range" FontSize="9" TextColor="#4B5563" />
                                     </StackLayout>
-                                    <Button Grid.Column="2" Text="HISTORY" BackgroundColor="#059669" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding NavAgentHistoryCommand}" />
+                                    <Button Grid.Column="2" Text="HISTORY" BackgroundColor="#059669" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Clicked="Button_Clicked_3" />
                                 </Grid>
                             </Frame>
 
                             <!-- Settings -->
                             <Frame CornerRadius="12" Padding="15" HasShadow="True" BorderColor="#E5E7EB">
-                                <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding OpenSettingsCommand}"/>
-                                </Frame.GestureRecognizers>
+                  
                                 <Grid ColumnDefinitions="4, *, Auto">
                                     <BoxView Grid.Column="0" BackgroundColor="#059669" CornerRadius="2" />
                                     <StackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
@@ -132,7 +130,7 @@
                                         <Label Text="ZIRS" FontSize="11" FontAttributes="Bold" TextColor="#059669" />
                                         <Label Text="Access additional settings and tools" FontSize="9" TextColor="#4B5563" />
                                     </StackLayout>
-                                    <Button Grid.Column="2" Text="OPTIONS" BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Command="{Binding OpenSettingsCommand}" />
+                                    <Button Grid.Column="2" Text="OPTIONS" BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="35" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" Clicked="TapGestureRecognizer_Tapped" />
                                 </Grid>
                             </Frame>
                         </StackLayout>
@@ -145,7 +143,7 @@
         <StackLayout VerticalOptions="End" HorizontalOptions="End" Margin="0,0,20,30" Spacing="15">
             <Frame BackgroundColor="#064E3B" CornerRadius="30" HeightRequest="60" WidthRequest="60" Padding="0" HasShadow="True">
                 <Frame.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding TestPrintCommand}"/>
+                    <TapGestureRecognizer Tapped="TapGestureRecognizer_Tapped_2"/>
                 </Frame.GestureRecognizers>
                 <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
                     <Label Text="🖨️" FontSize="18" HorizontalOptions="Center" />
@@ -154,7 +152,7 @@
             </Frame>
             <Frame BackgroundColor="#064E3B" CornerRadius="30" HeightRequest="60" WidthRequest="60" Padding="0" HasShadow="True">
                 <Frame.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding LogoutCommand}"/>
+                    <TapGestureRecognizer Tapped="TapGestureRecognizer_Tapped_1"/>
                 </Frame.GestureRecognizers>
                 <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
                     <Image Source="shutdown" HeightRequest="20"  HorizontalOptions="Center" />
