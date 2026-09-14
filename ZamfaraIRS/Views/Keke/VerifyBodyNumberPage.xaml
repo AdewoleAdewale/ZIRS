@@ -6,7 +6,7 @@
              NavigationPage.HasNavigationBar="False">
 
     <Grid>
-        <!-- MAIN VERIFICATION UI (44.jpeg) -->
+        <!-- MAIN VERIFICATION UI -->
         <StackLayout Spacing="20" Padding="20,40,20,20">
             <StackLayout HorizontalOptions="Center" Spacing="5">
                 <Label Text="VERIFY ID FOR PAYMENT" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
@@ -20,7 +20,7 @@
                     <Frame Padding="15,0" CornerRadius="8" BackgroundColor="#F9FAFB" HasShadow="False" BorderColor="#E5E7EB" HeightRequest="50">
                         <Entry Text="{Binding BodyNumberInput}" Placeholder="e.g. Gus202" FontSize="14" FontAttributes="Bold" TextColor="#111827" TextTransform="Uppercase" />
                     </Frame>
-                    <Button Text="VERIFY BODY NUMBER" Clicked="Button_Clicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" />
+                    <Button Text="VERIFY BODY NUMBER" Clicked="OnVerifyClicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" />
                 </StackLayout>
             </Frame>
 
@@ -36,7 +36,6 @@
                     </Frame>
 
                     <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, *" RowSpacing="15">
-                        <!-- Row 1 -->
                         <StackLayout Grid.Row="0" Grid.Column="0">
                             <Label Text="BODY NUMBER" FontSize="10" TextColor="Gray" />
                             <Label Text="{Binding VerificationResult.KekeNo}" FontSize="13" FontAttributes="Bold" TextColor="#111827" TextTransform="Uppercase"/>
@@ -46,7 +45,6 @@
                             <Label Text="{Binding VerificationResult.VehicleType}" FontSize="13" FontAttributes="Bold" TextColor="#DC2626" />
                         </StackLayout>
 
-                        <!-- Row 2 -->
                         <StackLayout Grid.Row="1" Grid.Column="0">
                             <Label Text="SERVICE NAME" FontSize="10" TextColor="Gray" />
                             <Label Text="{Binding VerificationResult.ServiceName}" FontSize="13" FontAttributes="Bold" TextColor="#111827" />
@@ -56,7 +54,6 @@
                             <Label Text="{Binding VerificationResult.ServiceAmt}" FontSize="13" FontAttributes="Bold" TextColor="#DC2626" />
                         </StackLayout>
 
-                        <!-- Row 3 -->
                         <StackLayout Grid.Row="2" Grid.Column="0">
                             <Label Text="DAYS PAID FOR" FontSize="10" TextColor="Gray" />
                             <Label Text="{Binding VerificationResult.DayDiff}" FontSize="13" FontAttributes="Bold" TextColor="#111827" />
@@ -67,14 +64,13 @@
                         </StackLayout>
                     </Grid>
 
-                    <Button Text="MAKE PAYMENT" Command="{Binding OpenPaymentSheetCommand}" Clicked="Button_Clicked_1" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" Margin="0,15,0,0" />
+                    <Button Text="MAKE PAYMENT" Clicked="OnOpenPaymentSheetClicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" Margin="0,15,0,0" />
                 </StackLayout>
             </Frame>
         </StackLayout>
 
         <!-- PAYMENT BOTTOM SHEET -->
         <ContentView IsVisible="{Binding ShowPaymentSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
-            
             <StackLayout VerticalOptions="End" BackgroundColor="#F3F4F6" Padding="20,20,20,40" Spacing="15" >
                 <BoxView HeightRequest="4" WidthRequest="40" BackgroundColor="#D1D5DB" HorizontalOptions="Center" CornerRadius="2" Margin="0,0,0,10"/>
                 <Label Text="COLLECT TAX FROM TAXPAYER" FontSize="16" FontAttributes="Bold" TextColor="#064E3B" HorizontalOptions="Center" Margin="0,0,0,10" />
@@ -115,12 +111,12 @@
                     <Entry Text="{Binding PinInput}" Placeholder="Enter 4-digit PIN" IsPassword="True" MaxLength="4" Keyboard="Numeric" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
                 </Frame>
 
-                <Button Text="MAKE PAYMENT" Command="{Binding ProcessPaymentCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" Margin="0,10,0,0" />
-                <Button Text="CANCEL" Command="{Binding CloseSheetsCommand}" BackgroundColor="Transparent" TextColor="#6B7280" FontAttributes="Bold" HeightRequest="40" />
+                <Button Text="MAKE PAYMENT" Clicked="OnProcessPaymentClicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" Margin="0,10,0,0" />
+                <Button Text="CANCEL" Clicked="OnCloseSheetsClicked" BackgroundColor="Transparent" TextColor="#6B7280" FontAttributes="Bold" HeightRequest="40" />
             </StackLayout>
         </ContentView>
 
-        <!-- ERROR POPUP (33.jpeg) -->
+        <!-- ERROR POPUP -->
         <ContentView IsVisible="{Binding ShowErrorSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
             <StackLayout VerticalOptions="Center" HorizontalOptions="Center" BackgroundColor="White" Padding="25" Spacing="15"  WidthRequest="300">
                 <Frame BackgroundColor="#EF4444" HeightRequest="60" WidthRequest="60" CornerRadius="30" HorizontalOptions="Center" HasShadow="False" Padding="0">
@@ -131,16 +127,15 @@
                 <Label Text="{Binding ErrorMessage}" FontSize="12" TextColor="#111827" HorizontalTextAlignment="Center" FontAttributes="Bold" Margin="0,0,0,10" />
 
                 <Grid ColumnDefinitions="*, *">
-                    <Button Grid.Column="0" Text="TRY AGAIN" Command="{Binding CloseSheetsCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" FontAttributes="Bold" />
-                    <Button Grid.Column="1" Text="CANCEL" Command="{Binding CloseSheetsCommand}" BackgroundColor="#F3F4F6" TextColor="#6B7280" CornerRadius="8" FontAttributes="Bold" />
+                    <Button Grid.Column="0" Text="TRY AGAIN" Clicked="OnCloseSheetsClicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" FontAttributes="Bold" />
+                    <Button Grid.Column="1" Text="CANCEL" Clicked="OnCloseSheetsClicked" BackgroundColor="#F3F4F6" TextColor="#6B7280" CornerRadius="8" FontAttributes="Bold" />
                 </Grid>
             </StackLayout>
         </ContentView>
 
         <!-- SUCCESS POPUP -->
         <ContentView IsVisible="{Binding ShowSuccessSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
-            
-            <StackLayout VerticalOptions="Center" HorizontalOptions="Center" BackgroundColor="White" Padding="25" Spacing="15"  WidthRequest="300">
+            <StackLayout VerticalOptions="Center" HorizontalOptions="Center" BackgroundColor="White" Padding="25" Spacing="15" WidthRequest="300">
                 <Frame BackgroundColor="#10B981" HeightRequest="60" WidthRequest="60" CornerRadius="30" HorizontalOptions="Center" HasShadow="False" Padding="0">
                     <Label Text="✓" FontSize="28" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Frame>
@@ -148,8 +143,8 @@
                 <Label Text="PAYMENT SUCCESSFUL" FontSize="16" FontAttributes="Bold" TextColor="#10B981" HorizontalOptions="Center" />
                 <Label Text="{Binding SuccessMessage}" FontSize="12" TextColor="#111827" HorizontalTextAlignment="Center" FontAttributes="Bold" Margin="0,0,0,10" />
 
-                <Button Text="PRINT RECEIPT" Clicked="Button_Clicked_2" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" />
-                <Button Text="DONE" Command="{Binding CloseSheetsCommand}" BackgroundColor="#F3F4F6" TextColor="#6B7280" CornerRadius="8" FontAttributes="Bold" />
+                <Button Text="PRINT RECEIPT" Clicked="OnPrintReceiptClicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" />
+                <Button Text="DONE" Clicked="OnCloseSheetsClicked" BackgroundColor="#F3F4F6" TextColor="#6B7280" CornerRadius="8" FontAttributes="Bold" />
             </StackLayout>
         </ContentView>
 

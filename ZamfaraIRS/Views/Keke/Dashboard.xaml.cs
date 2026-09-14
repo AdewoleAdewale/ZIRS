@@ -19,7 +19,9 @@ namespace ZamfaraIRS.Views.Keke
     {
         private bool _isNavigating = false;
 
-    public string AgentName { get; set; } = MainPage.Name;
+        private readonly IReceiptPrintService _printService;
+
+        public string AgentName { get; set; } = MainPage.Name;
     public string LastLogin { get; set; } = DateTime.Now.ToString();
     public string CurrentDate { get; set; }
 
@@ -147,6 +149,35 @@ namespace ZamfaraIRS.Views.Keke
         private async void TapGestureRecognizer_Tapped_2(object sender, EventArgs e)
         {
             await PrintTestReceiptAsync();
+        }
+
+        private async void OnTestPrintTapped(object sender, EventArgs e)
+        {
+            SessionManager.Instance.UpdateActivity();
+            try
+            {
+                if (_printService != null)
+                {
+                    await _printService.PrintTestReceiptAsync();
+                }
+                else
+                {
+                    await DisplayAlert("Printer Unavailable", "The print service is not initialized.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Printer Error", $"Could not print test receipt: {ex.Message}", "OK");
+            }
+        }
+
+        private async void OnLogoutTapped(object sender, EventArgs e)
+        {
+            bool confirm = await DisplayAlert("Logout", "Are you sure you want to log out?", "Yes", "No");
+            if (confirm)
+            {
+                await SessionManager.Instance.LogoutAsync();
+            }
         }
 
         private async void TapGestureRecognizer_Tapped_1(object sender, EventArgs e)

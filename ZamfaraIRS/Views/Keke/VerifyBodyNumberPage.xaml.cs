@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using Xamarin.Forms;
 using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
@@ -18,7 +17,6 @@ namespace ZamfaraIRS.Views.Keke
         private bool _hasResult;
         private KekeStatusResponse _verificationResult;
 
-        // Payment Sheet Properties
         private bool _showPaymentSheet;
         private bool _showErrorSheet;
         private bool _showSuccessSheet;
@@ -46,12 +44,7 @@ namespace ZamfaraIRS.Views.Keke
         public int SelectedDays
         {
             get => _selectedDays;
-            set
-            {
-                _selectedDays = value;
-                OnPropertyChanged();
-                CalculateTotal();
-            }
+            set { _selectedDays = value; OnPropertyChanged(); CalculateTotal(); }
         }
 
         public decimal TotalAmountToPay
@@ -60,46 +53,27 @@ namespace ZamfaraIRS.Views.Keke
             set { _totalAmountToPay = value; OnPropertyChanged(); }
         }
 
-        public ICommand VerifyCommand { get; }
-        public ICommand OpenPaymentSheetCommand { get; }
-        public ICommand CloseSheetsCommand { get; }
-        public ICommand ProcessPaymentCommand { get; }
-        public ICommand PrintReceiptCommand { get; }
-
         public VerifyBodyNumberPage()
         {
             InitializeComponent();
             _kekeService = new KekeService();
             BindingContext = this;
-
-            VerifyCommand = new Command(async () => await ExecuteVerifyAsync());
-            OpenPaymentSheetCommand = new Command(() => {
-                SelectedDays = 1;
-                PinInput = string.Empty;
-                ShowPaymentSheet = true;
-            });
-            CloseSheetsCommand = new Command(() => {
-                ShowPaymentSheet = false;
-                ShowErrorSheet = false;
-                ShowSuccessSheet = false;
-            });
-            ProcessPaymentCommand = new Command(async () => await ExecutePaymentAsync());
-            PrintReceiptCommand = new Command(async () => await ExecutePrintReceiptAsync());
         }
 
-        private async Task ExecuteVerifyAsync()
+        private async void OnVerifyClicked(object sender, EventArgs e)
         {
+            SessionManager.Instance.UpdateActivity();
+
             if (string.IsNullOrWhiteSpace(BodyNumberInput)) return;
 
             IsBusy = true;
             HasResult = false;
             try
             {
-                // Concode is mandatory for the GetKekeCount lookup[cite: 2]
-                string concode = "9LF299r0afwIXMN";
+                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
                 var result = await _kekeService.GetKekeStatusAsync(BodyNumberInput.Trim().ToUpper(), concode);
 
-                if (result != null && (result.Status == "00" || result.Status == "01")) // 00 = Not owing, 01 = Owing[cite: 2]
+                if (result != null && (result.Status == "00" || result.Status == "01"))
                 {
                     VerificationResult = result;
                     CalculateTotal();
@@ -120,6 +94,22 @@ namespace ZamfaraIRS.Views.Keke
             }
         }
 
+        private void OnOpenPaymentSheetClicked(object sender, EventArgs e)
+        {
+            SessionManager.Instance.UpdateActivity();
+            SelectedDays = 1;
+            PinInput = string.Empty; // Ensure PIN is blank when opening
+            ShowPaymentSheet = true;
+        }
+
+        private void OnCloseSheetsClicked(object sender, EventArgs e)
+        {
+            SessionManager.Instance.UpdateActivity();
+            ShowPaymentSheet = false;
+            ShowErrorSheet = false;
+            ShowSuccessSheet = false;
+        }
+
         private void CalculateTotal()
         {
             if (VerificationResult != null && decimal.TryParse(VerificationResult.ServiceAmt, out decimal rate))
@@ -128,8 +118,10 @@ namespace ZamfaraIRS.Views.Keke
             }
         }
 
-        private async Task ExecutePaymentAsync()
+        private async void OnProcessPaymentClicked(object sender, EventArgs e)
         {
+            SessionManager.Instance.UpdateActivity();
+
             if (SelectedDays < 1 || SelectedDays > 12)
             {
                 ErrorMessage = "Please select a valid number of days (1-12).";
@@ -145,14 +137,13 @@ namespace ZamfaraIRS.Views.Keke
             }
 
             IsBusy = true;
-            ShowPaymentSheet = false; // Hide form while processing
+            ShowPaymentSheet = false;
 
             try
             {
                 string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
                 string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
 
-                // Post via KekeTransactions/Post/v3/KekeTransact[cite: 2]
                 var response = await _kekeService.SubmitKekeTransactionAsync(
                     VerificationResult.ServiceName,
                     agentEmail,
@@ -162,7 +153,6 @@ namespace ZamfaraIRS.Views.Keke
                     concode
                 );
 
-                // Check for "00" success code[cite: 2]
                 if (response != null && response.RespondCode == "00")
                 {
                     _transactionNo = response.TransactionNo;
@@ -171,7 +161,6 @@ namespace ZamfaraIRS.Views.Keke
                 }
                 else
                 {
-                    // RespondCode "02", "06", or others trigger error messages[cite: 2]
                     ErrorMessage = response?.ResponseMessage ?? "Insufficient Super Agent wallet balance or network error.";
                     ShowErrorSheet = true;
                 }
@@ -187,29 +176,36 @@ namespace ZamfaraIRS.Views.Keke
             }
         }
 
-        private async Task ExecutePrintReceiptAsync()
+        private async void OnPrintReceiptClicked(object sender, EventArgs e)
         {
+            SessionManager.Instance.UpdateActivity();
             string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
 
-            // Print Keke receipt using the existing SDK methodology implemented previously[cite: 6]
-            bool success = await ShopReceiptPrinter.PrintKekeReceiptAsync(
-                transactionNo: _transactionNo ?? $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
-                vehiclePlateNo: VerificationResult.KekeNo,
-                serviceName: VerificationResult.ServiceName,
-                amountPaid: TotalAmountToPay,
-                lga: "ZIRS Collection", // Or VerificationResult.Lga if available
-                agentEmail: agentEmail,
-                isReprint: false
-            );
+            try
+            {
+                bool success = await ShopReceiptPrinter.PrintKekeReceiptAsync(
+                    transactionNo: _transactionNo ?? $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
+                    vehiclePlateNo: VerificationResult.KekeNo,
+                    serviceName: VerificationResult.ServiceName,
+                    amountPaid: TotalAmountToPay,
+                    lga: "ZIRS Collection",
+                    agentEmail: agentEmail,
+                    isReprint: false
+                );
 
-            if (success)
-            {
-                CloseSheetsCommand.Execute(null);
-                await Navigation.PopToRootAsync();
+                if (success)
+                {
+                    OnCloseSheetsClicked(null, null);
+                    await Navigation.PopToRootAsync();
+                }
+                else
+                {
+                    await DisplayAlert("Printer Error", "Ensure the printer is connected via Bluetooth.", "OK");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await DisplayAlert("Printer Error", "Ensure the printer is connected via Bluetooth.", "OK");
+                await DisplayAlert("Printer Error", $"An error occurred while printing: {ex.Message}", "OK");
             }
         }
 
@@ -217,21 +213,6 @@ namespace ZamfaraIRS.Views.Keke
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private async void Button_Clicked(object sender, EventArgs e)
-        {
-            await ExecuteVerifyAsync();
-        }
-
-        private async void Button_Clicked_1(object sender, EventArgs e)
-        {
-            await ExecutePaymentAsync();
-        }
-
-        private async void Button_Clicked_2(object sender, EventArgs e)
-        {
-            await ExecutePrintReceiptAsync();
         }
     }
 }
