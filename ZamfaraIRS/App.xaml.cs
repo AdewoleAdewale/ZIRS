@@ -56,12 +56,61 @@ namespace ZamfaraIRS
             }
         }
 
-        protected override void OnStart()
+        protected override async void OnStart()
         {
-            if (IsUserLoggedIn)
+            // 1. Attempt to auto-login and restore session data (including Category & Super_Agent)
+            bool isLoggedIn = await SessionManager.Instance.TryAutoLoginAsync();
+
+            if (isLoggedIn)
             {
-                SessionManager.Instance.StartSession();
-                // REMOVED: _ = ReceiptPrinter.RetryPendingAsync();
+                Page targetDashboard;
+
+                // 2. Route the user based on their stored category profile
+                // string userCategory = MainPage.Category?.ToLower() ?? "";
+                // Replace this line in OnStart():
+                // string userCategory = MainPage.Category?.ToLower() ?? "";
+
+                // With the following code to safely retrieve the user category from the BindingContext, if available:
+                string userCategory = "";
+
+                if (MainPage is NavigationPage navPage && navPage.CurrentPage?.BindingContext != null)
+                {
+                    var categoryProperty = navPage.CurrentPage.BindingContext.GetType().GetProperty("Category");
+                    if (categoryProperty != null)
+                    {
+                        var categoryValue = categoryProperty.GetValue(navPage.CurrentPage.BindingContext) as string;
+                        userCategory = categoryValue?.ToLower() ?? "";
+                    }
+                }
+                if (userCategory.Contains("keke") || userCategory.Contains("tricycle"))
+                {
+                    // Route to Keke Module
+                    targetDashboard = new ZamfaraIRS.Views.Keke.Dashboard();
+                }
+                else
+                {
+                    // Default to Market/Shop Module
+                    targetDashboard = new ZamfaraIRS.Views.Market.Dashboard(); // or ShopDashboardPage depending on your exact naming
+                }
+
+                // 3. Set the MainPage
+                MainPage = new NavigationPage(targetDashboard)
+                {
+                    BarBackgroundColor = Color.FromHex("#064E3B"),
+                    BarTextColor = Color.White
+                };
+
+                // 4. (Optional) Start your printer retry queue if applicable
+                // _ = ReceiptPrinter.RetryPendingAsync(); 
+            }
+            else
+            {
+                // Session invalid or expired, route to Login Page
+                MainPage = new NavigationPage(new MainPage())
+                {
+                    BarBackgroundColor = Color.FromHex("#064E3B"),
+                    BarTextColor = Color.White
+                };
             }
         }
 

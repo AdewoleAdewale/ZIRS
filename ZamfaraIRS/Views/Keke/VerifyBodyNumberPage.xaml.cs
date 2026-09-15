@@ -211,6 +211,9 @@ namespace ZamfaraIRS.Views.Keke
             catch (Exception ex)
             {
                 await DisplayAlert("Printer Error", $"An error occurred while printing: {ex.Message}", "OK");
+                // Ensure the UI still resets gracefully even if printing fails
+                CloseSheetsCommand.Execute(null);
+                await Navigation.PopToRootAsync();
             }
         }
 
