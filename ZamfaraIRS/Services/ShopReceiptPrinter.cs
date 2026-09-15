@@ -19,8 +19,8 @@ namespace ZamfaraIRS.Services
             receipt.ReceiptBannerText = isReprint ? "SHOP REGISTRATION (REPRINT)" : "SHOP REGISTRATION";
             receipt.ReceiptNumber = payerId; 
             receipt.AgentName = MainPage.Name; 
-            receipt.CollectionPoint = marketName; 
-            receipt.BarcodeLabel = $"{BrandConfig.VerifyReceiptUrl}{payerId}"; 
+            receipt.CollectionPoint = marketName;
+            receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/SingleCollections/Verify?TransactId={payerId}";
 
             if (isReprint)
             {
@@ -77,8 +77,8 @@ namespace ZamfaraIRS.Services
             receipt.CollectionPoint = marketName; 
             receipt.TotalAmount = amountPaid + balanceRemaining; 
             receipt.AmountPaid = amountPaid; 
-            receipt.AmountLeft = balanceRemaining; 
-            receipt.BarcodeLabel = $"{BrandConfig.VerifyReceiptUrl}{refNo}"; 
+            receipt.AmountLeft = balanceRemaining;
+            receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/SingleCollections/Verify?TransactId={refNo}";
 
             if (isReprint)
             {
@@ -141,8 +141,8 @@ namespace ZamfaraIRS.Services
             receipt.CollectionPoint = marketName; 
             receipt.TotalAmount = amountPaid + balanceRemaining; 
             receipt.AmountPaid = amountPaid; 
-            receipt.AmountLeft = balanceRemaining; 
-            receipt.BarcodeLabel = $"{BrandConfig.VerifyReceiptUrl}{refNo}"; 
+            receipt.AmountLeft = balanceRemaining;
+            receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/SingleCollections/Verify?TransactId={refNo}";
 
             if (isReprint)
             {
@@ -214,8 +214,7 @@ namespace ZamfaraIRS.Services
                 new ReceiptItem { Description = serviceName, Amount = amountPaid },
                 new ReceiptItem { Description = "Vehicle Plate No", SubText = vehiclePlateNo, Amount = 0 }
             };
-
-            receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/verify?ref={transactionNo}";
+            receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/SingleCollections/Verify?TransactId={transactionNo}";
             receipt.FooterLine1 = isReprint ? "*** REPRINTED RECEIPT ***" : "Status: APPROVED SUCCESSFUL";
             receipt.FooterLine2 = "POWERED BY OSOFTPAY";
 

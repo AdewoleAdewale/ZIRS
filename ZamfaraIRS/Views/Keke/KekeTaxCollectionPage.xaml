@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:yummy="clr-namespace:Xamarin.Forms.PancakeView;assembly=Xamarin.Forms.PancakeView"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+             xmlns:yummy="clr-namespace:Xamarin.Forms.PancakeView;assembly=Xamarin.Forms.PancakeView"
              x:Class="ZamfaraIRS.Views.Keke.KekeTaxCollectionPage"
              BackgroundColor="#064E3B"
              NavigationPage.HasNavigationBar="False">
 
     <Grid>
-        <!-- Main Form (`5_2.jpeg`) -->
+        <!-- Main Form -->
         <StackLayout Spacing="0">
             <StackLayout Padding="20,40,20,20" Spacing="5">
                 <Label Text="TAX COLLECTION SYSTEM" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
@@ -36,17 +37,17 @@
                             <Entry Text="{Binding SelectedService.ServiceAmount, StringFormat='₦{0}'}" IsReadOnly="True" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
                         </Frame>
 
-                        <Label Text=" Payer Information" FontSize="12" FontAttributes="Bold" TextColor="#D97706" Margin="0,10,0,0"/>
+                        <Label Text="Payer Information" FontSize="12" FontAttributes="Bold" TextColor="#D97706" Margin="0,10,0,0"/>
 
                         <Label Text="Payer ID / Body Number" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
                         <Grid ColumnDefinitions="*, Auto">
                             <Frame Grid.Column="0" Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
                                 <Entry Text="{Binding PayerId}" Placeholder="Enter Payer ID" IsReadOnly="{Binding IsVerified}" FontSize="13" FontAttributes="Bold" TextTransform="Uppercase" />
                             </Frame>
-                            <Button Grid.Column="1" Text="VERIFY" Clicked="Button_Clicked_1" IsVisible="{Binding IsNotVerified}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" />
+                            <Button Grid.Column="1" Text="VERIFY" Clicked="Button_Clicked_2" IsVisible="{Binding IsNotVerified}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" />
                         </Grid>
 
-                        <Label Text=" Agent PIN" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
+                        <Label Text="Agent PIN" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
                         <Frame Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
                             <Entry Text="{Binding PinInput}" Placeholder="Enter 4-digit PIN" IsPassword="True" MaxLength="4" Keyboard="Numeric" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
                         </Frame>
@@ -61,30 +62,54 @@
             </Frame>
         </StackLayout>
 
-        <!-- Verification Success Popup (`22.jpeg`) -->
+        <!-- Verification Success Popup with Verified Details -->
         <ContentView IsVisible="{Binding ShowVerifySuccessSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
-            <Frame BackgroundColor="White" CornerRadius="8" Padding="25" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="280" HasShadow="True">
-                <StackLayout Spacing="15">
-                    <Label Text="Verification Success" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
-                    <Label Text="Payer ID verified successfully" FontSize="14" TextColor="#374151" />
-                    <Button Text="OK" Command="{Binding CloseSheetsCommand}" BackgroundColor="Transparent" TextColor="#064E3B" FontAttributes="Bold" HorizontalOptions="End" Margin="0,15,0,0" />
+            <Frame BackgroundColor="White" CornerRadius="12" Padding="20" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="300" HasShadow="True">
+                <StackLayout Spacing="12">
+                    <StackLayout Orientation="Horizontal" Spacing="10" VerticalOptions="Center">
+                        <Label Text="✓" FontSize="20" TextColor="#059669" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Text="Verification Successful" FontSize="16" FontAttributes="Bold" TextColor="#111827" VerticalOptions="Center" />
+                    </StackLayout>
+
+                    <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" />
+
+                    <!-- Dynamic Details Grid -->
+                    <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="Auto, *" RowSpacing="8">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Body No:" FontSize="12" TextColor="#6B7280" FontAttributes="Bold"/>
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding VerifiedKekeNo}" FontSize="12" TextColor="#111827" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Vehicle Type:" FontSize="12" TextColor="#6B7280" FontAttributes="Bold"/>
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding VerifiedVehicleType}" FontSize="12" TextColor="#DC2626" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Status:" FontSize="12" TextColor="#6B7280" FontAttributes="Bold"/>
+                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding VerifiedStatusMessage}" FontSize="12" TextColor="#059669" FontAttributes="Bold" HorizontalTextAlignment="End"/>
+                    </Grid>
+
+                    <!-- Direct Clicked Event to prevent freezing -->
+                    <Button Text="PROCEED TO PAYMENT" 
+                            Clicked="OnCloseSheetsClicked" 
+                            BackgroundColor="#064E3B" 
+                            TextColor="White" 
+                            CornerRadius="8" 
+                            HeightRequest="45" 
+                            FontAttributes="Bold" 
+                            Margin="0,10,0,0" />
                 </StackLayout>
             </Frame>
         </ContentView>
 
-        <!-- Payment Failed Bottom Sheet (`11.jpeg`) -->
+        <!-- Payment Failed Bottom Sheet -->
         <ContentView IsVisible="{Binding ShowErrorSheet}" BackgroundColor="#80000000" VerticalOptions="FillAndExpand">
-            <yummy:PancakeView CornerRadius="20,20,0,0">
-                <StackLayout VerticalOptions="End" BackgroundColor="White" Padding="25" Spacing="15" >
-                    <Label Text="✖" FontSize="50" TextColor="#DC2626" FontAttributes="Bold" HorizontalOptions="Center" />
-                    <Label Text="Payment Failed" FontSize="20" FontAttributes="Bold" TextColor="#DC2626" HorizontalOptions="Center" />
+            <yummy:PancakeView CornerRadius="20,20,0,0" VerticalOptions="End">
+                <StackLayout BackgroundColor="White" Padding="25" Spacing="15">
+                    <Label Text="✖" FontSize="40" TextColor="#DC2626" FontAttributes="Bold" HorizontalOptions="Center" />
+                    <Label Text="Payment Failed" FontSize="18" FontAttributes="Bold" TextColor="#DC2626" HorizontalOptions="Center" />
                     <Label Text="{Binding ErrorMessage}" FontSize="13" FontAttributes="Bold" TextColor="#111827" HorizontalTextAlignment="Center" Margin="0,0,0,15" />
 
-                    <Button Text="TRY AGAIN" Command="{Binding CloseSheetsCommand}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="10" HeightRequest="50" FontAttributes="Bold" />
-                    <Button Text="CLOSE" Command="{Binding CloseSheetsCommand}" BackgroundColor="Transparent" TextColor="#DC2626" BorderColor="#DC2626" BorderWidth="1" CornerRadius="10" HeightRequest="50" FontAttributes="Bold" />
+                    <Button Text="TRY AGAIN" Clicked="OnCloseSheetsClicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="10" HeightRequest="50" FontAttributes="Bold" />
+                    <Button Text="CLOSE" Clicked="OnCloseSheetsClicked" BackgroundColor="Transparent" TextColor="#DC2626" BorderColor="#DC2626" BorderWidth="1" CornerRadius="10" HeightRequest="50" FontAttributes="Bold" />
                 </StackLayout>
-                </yummy:PancakeView>
-       
+            </yummy:PancakeView>
         </ContentView>
     </Grid>
 </ContentPage>

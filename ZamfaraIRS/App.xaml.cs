@@ -56,34 +56,13 @@ namespace ZamfaraIRS
             }
         }
 
-        protected override async void OnStart()
+        protected override void OnStart()
         {
-            // Automatic login routing via SessionManager
-            bool isLoggedIn = await SessionManager.Instance.TryAutoLoginAsync();
-
-            if (isLoggedIn)
+            if (IsUserLoggedIn)
             {
-                MainPage = new NavigationPage(new ZamfaraIRS.Views.Market.Dashboard())
-                {
-                    BarBackgroundColor = Color.FromHex("#064E3B"),
-                    BarTextColor = Color.White
-                };
-
-                _ = ReceiptPrinter.RetryPendingAsync(); 
-    }
-            else
-            {
-                MainPage = new NavigationPage(new MainPage())
-                {
-                    BarBackgroundColor = Color.FromHex("#064E3B"),
-                    BarTextColor = Color.White
-                };
+                SessionManager.Instance.StartSession();
+                // REMOVED: _ = ReceiptPrinter.RetryPendingAsync();
             }
-        }
-
-        protected override void OnSleep()
-        {
-            SessionManager.Instance.StopSession();
         }
 
         protected override void OnResume()
@@ -92,8 +71,15 @@ namespace ZamfaraIRS
             {
                 SessionManager.Instance.StartSession();
                 SessionManager.Instance.UpdateActivity();
-                _ = ReceiptPrinter.RetryPendingAsync();
+                // REMOVED: _ = ReceiptPrinter.RetryPendingAsync();
             }
         }
+
+        protected override void OnSleep()
+        {
+            SessionManager.Instance.StopSession();
+        }
+
+      
     }
 }

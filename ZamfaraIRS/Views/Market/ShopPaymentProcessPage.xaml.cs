@@ -95,19 +95,30 @@ namespace ZamfaraIRS.Views.Market
         }
 
     
+     
+
+
         private async Task ExecutePayment()
         {
             SessionManager.Instance.UpdateActivity();
 
+            // 1. Check Bluetooth State First
+            var btManager = Xamarin.Forms.DependencyService.Get<IBluetoothManager>();
+            if (btManager != null && !btManager.IsBluetoothEnabled())
+            {
+                await DisplayAlert("Bluetooth Off", "Please turn on your Bluetooth and connect to the printer before processing a transaction.", "OK");
+                return; // Halt the transaction entirely
+            }
+
+            // 2. Proceed with Payment Logic
             _currentTransactionRef = $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
 
-            await Task.Delay(500); 
-            ShowSuccessSheet = true; 
+            await Task.Delay(500);
+            ShowSuccessSheet = true;
 
             // Automatically print the original receipt upon successful payment
             await ExecutePrintReceipt(isReprint: false);
         }
-
         private async Task ExecutePrintReceipt(bool isReprint)
         {
             decimal.TryParse(TotalCalculated, out decimal amt);
