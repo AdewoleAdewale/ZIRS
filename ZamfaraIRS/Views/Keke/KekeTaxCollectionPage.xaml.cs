@@ -154,7 +154,7 @@ namespace ZamfaraIRS.Views.Keke
             {
                 string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
                 string concode = MainPage.Super_Agent ?? "9LF299r0afwIXMN";
-                decimal.TryParse(SelectedService.ServiceAmount, out decimal amount);
+                decimal.TryParse(SelectedService.ServiceAmount?.Replace(",", ""), out decimal amount);
 
                 var response = await _kekeService.SubmitKekeTransactionAsync(
                     SelectedService.ServiceName,

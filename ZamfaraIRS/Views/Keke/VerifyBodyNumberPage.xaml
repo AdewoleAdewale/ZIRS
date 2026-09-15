@@ -65,7 +65,7 @@
                     </Grid>
 
                     <!-- Button to OPEN the payment sheet (Do not bind payment execution here) -->
-                    <Button Text="MAKE PAYMENT" Clicked="OnOpenPaymentSheetClicked"  BackgroundColor="#005A9C"  TextColor="White" />
+                    <Button Text="MAKE PAYMENT" Clicked="OnOpenPaymentSheetClicked"  BackgroundColor="Red"  TextColor="White" CornerRadius="10" />
 
                     <!-- ... Inside your Bottom Sheet / Popup UI ... -->
                     <Frame IsVisible="{Binding ShowPaymentSheet}">

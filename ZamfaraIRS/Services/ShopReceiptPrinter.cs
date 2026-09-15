@@ -203,7 +203,7 @@ namespace ZamfaraIRS.Services
             receipt.StoreName = "ZAMFARA STATE INTERNAL REVENUE SERVICE";
             receipt.StoreSubTitle = isReprint ? "KEKE PERMIT (REPRINT)" : "KEKE / TRICYCLE TICKET";
             receipt.ReceiptNumber = transactionNo;
-            receipt.AgentName = agentEmail;
+            receipt.AgentName = MainPage.Name;
             receipt.CollectionPoint = lga;
             receipt.PrintDate = DateTime.Now;
             receipt.AmountPaid = amountPaid;
@@ -211,8 +211,10 @@ namespace ZamfaraIRS.Services
 
             receipt.Items = new List<ReceiptItem>
             {
-                new ReceiptItem { Description = serviceName, Amount = amountPaid },
-                new ReceiptItem { Description = "Vehicle Plate No", SubText = vehiclePlateNo, Amount = 0 }
+             
+                new ReceiptItem { Description = "SERVICE NAME", SubText = serviceName },
+                new ReceiptItem { Description = "BODY NO:", SubText = vehiclePlateNo, Amount = 0 },
+                 new ReceiptItem { Description = "AMOUNT", Amount = receipt.AmountPaid },
             };
             receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/SingleCollections/Verify?TransactId={transactionNo}";
             receipt.FooterLine1 = isReprint ? "*** REPRINTED RECEIPT ***" : "Status: APPROVED SUCCESSFUL";
