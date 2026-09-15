@@ -17,11 +17,9 @@ namespace ZamfaraIRS.Views.Keke
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class Dashboard :ContentPage, INotifyPropertyChanged
     {
-        private bool _isNavigating = false;
-
-        private readonly IReceiptPrintService _printService;
-
-        public string AgentName { get; set; } = MainPage.Name;
+     private bool _isNavigating = false;
+     private readonly IReceiptPrintService _printService;
+     public string AgentName { get; set; } = MainPage.Name;
     public string LastLogin { get; set; } = DateTime.Now.ToString();
     public string CurrentDate { get; set; }
 

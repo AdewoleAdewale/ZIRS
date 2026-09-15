@@ -208,7 +208,7 @@ namespace ZamfaraIRS.Services
                 "RRN2OP",
                 "MPT-II", "MTP-II_89EB", "MTP-II-6111",
                 "RPP02N", "RPP210",
-                "MP300", "IposPrinter", "FP8800", "S60",
+                "MP300", "IposPrinter", "FP8800", "S60","S680",
                 "InnerPrinter", "Internal Bluetooth Printer",
                 "printer001", "b906", "ANDROID BT", "CS10",
                 "Q2i",
