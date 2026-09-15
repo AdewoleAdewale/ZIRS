@@ -222,6 +222,31 @@ namespace ZamfaraIRS.Services
             await ReceiptPrinter.PrintAsync(receipt);
             return true;
         }
+
+        public static async Task<bool> PrintTestReceiptAsync()
+        {
+            try
+            {
+                var receipt = ReceiptPrinter.CreateBrandedReceipt();
+                if (receipt == null) return false;
+
+                receipt.StoreName = "PRINTER TEST";
+                receipt.StoreSubTitle = "TEST SPEED & CONNECTION";
+                receipt.ReceiptNumber = "TEST-" + DateTime.Now.Ticks.ToString().Substring(0, 8);
+                receipt.PrintDate = DateTime.Now;
+                receipt.AmountPaid = 0;
+                receipt.TotalAmount = 0;
+                receipt.FooterLine1 = "PRINTER IS CONFIGURED CORRECTLY";
+
+                await ReceiptPrinter.PrintAsync(receipt);
+                return true;
+            }
+            catch (Exception)
+            {
+                // Silently catch OS-level Bluetooth crashes and return false to the UI
+                return false;
+            }
+        }
     }
 }
     

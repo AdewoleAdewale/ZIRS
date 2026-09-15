@@ -64,7 +64,22 @@
                         </StackLayout>
                     </Grid>
 
-                    <Button Text="MAKE PAYMENT" Clicked="OnOpenPaymentSheetClicked" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" HeightRequest="50" FontAttributes="Bold" Margin="0,15,0,0" />
+                    <!-- Button to OPEN the payment sheet (Do not bind payment execution here) -->
+                    <Button Text="MAKE PAYMENT" Clicked="OnOpenPaymentSheetClicked"  BackgroundColor="#005A9C"  TextColor="White" />
+
+                    <!-- ... Inside your Bottom Sheet / Popup UI ... -->
+                    <Frame IsVisible="{Binding ShowPaymentSheet}">
+                        <StackLayout>
+                            <Label Text="Enter PIN to Confirm" />
+                            <Entry Text="{Binding EnteredPin}" IsPassword="True" Placeholder="****" />
+
+                            <!-- Button to actually SUBMIT the payment -->
+                            <Button Text="Confirm Payment" 
+                Clicked="OnConfirmPaymentClicked" 
+                BackgroundColor="#2E7D32" 
+                TextColor="White" />
+                        </StackLayout>
+                    </Frame>
                 </StackLayout>
             </Frame>
         </StackLayout>

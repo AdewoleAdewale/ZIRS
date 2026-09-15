@@ -149,7 +149,9 @@ namespace ZamfaraIRS.Views.Keke
             await PrintTestReceiptAsync();
         }
 
-        private async void OnTestPrintTapped(object sender, EventArgs e)
+
+
+        private async void OnTestPrintClicked(object sender, EventArgs e)
         {
             SessionManager.Instance.UpdateActivity();
             try
@@ -157,6 +159,7 @@ namespace ZamfaraIRS.Views.Keke
                 if (_printService != null)
                 {
                     await _printService.PrintTestReceiptAsync();
+                    await DisplayAlert("Success", "Test print spooled to printer.", "OK");
                 }
                 else
                 {

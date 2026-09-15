@@ -200,20 +200,24 @@ namespace ZamfaraIRS.Services
 
         #endregion
 
+ 
+
         #region ── Supported Printer Names ────────────────────────────────────
 
         private static readonly HashSet<string> SupportedPrinters =
-             new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-             {
-                "RRN2OP",
-                "MPT-II", "MTP-II_89EB", "MTP-II-6111",
-                "RPP02N", "RPP210",
-                "MP300", "IposPrinter", "FP8800", "S60","S680",
-                "InnerPrinter", "Internal Bluetooth Printer",
-                "printer001", "b906", "ANDROID BT", "CS10",
-                "Q2i",
-                "MP-58T" // Added the new MP-58T Thermal Printer
-             };
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+        "RRN2OP",
+        "MPT-II", "MTP-II_89EB", "MTP-II-6111",
+        "RPP02N", "RPP210",
+        "MP300", "IposPrinter", "FP8800", "S60",
+        "InnerPrinter", "Internal Bluetooth Printer", // Common for SmartPOS
+        "printer001", "b906", "ANDROID BT", "CS10",
+        "Q2i",
+        "MP-58T",  // Your previously added printer
+        "S680",    // Added for Trendit S680
+        "TRENDIT"  // Added for Trendit Manufacturer
+            };
 
         #endregion
 

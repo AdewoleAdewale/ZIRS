@@ -16,7 +16,7 @@ namespace ZamfaraIRS.Views.Keke
         private bool _isBusy;
         private bool _hasResult;
         private KekeStatusResponse _verificationResult;
-
+        private readonly IReceiptPrintService _printService;
         private bool _showPaymentSheet;
         private bool _showErrorSheet;
         private bool _showSuccessSheet;
@@ -28,7 +28,7 @@ namespace ZamfaraIRS.Views.Keke
         private string _transactionNo;
 
         public List<int> DaysOptions { get; } = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-
+        public string EnteredPin { get; set; }
         public string BodyNumberInput { get => _bodyNumberInput; set { _bodyNumberInput = value; OnPropertyChanged(); } }
         public bool IsBusy { get => _isBusy; set { _isBusy = value; OnPropertyChanged(); } }
         public bool HasResult { get => _hasResult; set { _hasResult = value; OnPropertyChanged(); } }
@@ -57,6 +57,7 @@ namespace ZamfaraIRS.Views.Keke
         {
             InitializeComponent();
             _kekeService = new KekeService();
+            _printService = new ReceiptPrintService();
             BindingContext = this;
         }
 
@@ -70,7 +71,7 @@ namespace ZamfaraIRS.Views.Keke
             HasResult = false;
             try
             {
-                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
+                string concode = "9LF299r0afwIXMN";
                 var result = await _kekeService.GetKekeStatusAsync(BodyNumberInput.Trim().ToUpper(), concode);
 
                 if (result != null && (result.Status == "00" || result.Status == "01"))
@@ -94,12 +95,14 @@ namespace ZamfaraIRS.Views.Keke
             }
         }
 
+
+
         private void OnOpenPaymentSheetClicked(object sender, EventArgs e)
         {
             SessionManager.Instance.UpdateActivity();
-            SelectedDays = 1;
-            PinInput = string.Empty; // Ensure PIN is blank when opening
+
             ShowPaymentSheet = true;
+            OnPropertyChanged(nameof(ShowPaymentSheet));
         }
 
         private void OnCloseSheetsClicked(object sender, EventArgs e)
@@ -142,7 +145,7 @@ namespace ZamfaraIRS.Views.Keke
             try
             {
                 string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
-                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
+                string concode = "9LF299r0afwIXMN";
 
                 var response = await _kekeService.SubmitKekeTransactionAsync(
                     VerificationResult.ServiceName,
