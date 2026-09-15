@@ -141,5 +141,10 @@ namespace ZamfaraIRS.Views.Keke
         {
             await ExecutePaymentAsync();
         }
+
+        private void Button_Clicked_1(object sender, EventArgs e)
+        {
+            ExecuteVerifyAsync();
+        }
     }
 }

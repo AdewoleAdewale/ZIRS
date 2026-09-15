@@ -143,7 +143,7 @@
         <StackLayout VerticalOptions="End" HorizontalOptions="End" Margin="0,0,20,30" Spacing="15">
             <Frame BackgroundColor="#064E3B" CornerRadius="30" HeightRequest="60" WidthRequest="60" Padding="0" HasShadow="True">
                 <Frame.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnTestPrintTapped"/>
+                    <TapGestureRecognizer Tapped="OnTestPrintClicked"/>
                 </Frame.GestureRecognizers>
                 <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
                     <Label Text="🖨️" FontSize="18" HorizontalOptions="Center" />

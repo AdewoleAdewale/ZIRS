@@ -13,7 +13,7 @@
             </StackLayout>
             <Label Text="ZAMFARA INTERNAL REVENUE SERVICE" TextColor="White" FontSize="11" FontAttributes="Bold" HorizontalOptions="Center" />
 
-            <Frame BackgroundColor="White" CornerRadius="15" Padding="15,5" HasShadow="False" HorizontalOptions="Center" Margin="0,10,0,0">
+            <Frame BackgroundColor="White" CornerRadius="10" Padding="15,5" HasShadow="False" HorizontalOptions="Center" Margin="0,10,0,0">
                 <Label Text="Services loaded" TextColor="#064E3B" FontSize="12" FontAttributes="Bold" />
             </Frame>
         </StackLayout>
@@ -24,7 +24,7 @@
 
                 <!-- Status Cards -->
                 <Grid ColumnDefinitions="*, 2*">
-                    <Frame Grid.Column="0" BackgroundColor="#059669" CornerRadius="12" Padding="15" HasShadow="True">
+                    <Frame Grid.Column="0" BackgroundColor="#064E3B" CornerRadius="12" Padding="15" HasShadow="True">
                         <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
                             <Label Text="{Binding CurrentDay}" TextColor="White" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center" />
                             <Label Text="{Binding CurrentMonth}" TextColor="White" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center" TextTransform="Uppercase" />
@@ -57,7 +57,7 @@
                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectServiceCommand}" CommandParameter="{Binding .}" />
                                 </Frame.GestureRecognizers>
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <Frame Grid.Column="0" BackgroundColor="#064E3B" CornerRadius="10" HeightRequest="50" WidthRequest="50" Padding="5" HasShadow="False">
+                                    <Frame Grid.Column="0" BackgroundColor="White" CornerRadius="10" HeightRequest="50" WidthRequest="50" Padding="5" HasShadow="False">
                                         <Image Source="zirs.png" />
                                     </Frame>
                                     <StackLayout Grid.Column="1" Margin="15,0,0,0" VerticalOptions="Center" Spacing="2">

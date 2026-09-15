@@ -156,15 +156,7 @@ namespace ZamfaraIRS.Views.Keke
             SessionManager.Instance.UpdateActivity();
             try
             {
-                if (_printService != null)
-                {
-                    await _printService.PrintTestReceiptAsync();
-                    await DisplayAlert("Success", "Test print spooled to printer.", "OK");
-                }
-                else
-                {
-                    await DisplayAlert("Printer Unavailable", "The print service is not initialized.", "OK");
-                }
+               await PrintTestReceiptAsync();
             }
             catch (Exception ex)
             {

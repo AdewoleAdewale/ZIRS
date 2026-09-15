@@ -75,7 +75,7 @@
 
                             <!-- Button to actually SUBMIT the payment -->
                             <Button Text="Confirm Payment" 
-                Clicked="OnConfirmPaymentClicked" 
+                Clicked="OnProcessPaymentClicked" 
                 BackgroundColor="#2E7D32" 
                 TextColor="White" />
                         </StackLayout>

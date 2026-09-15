@@ -32,7 +32,7 @@ namespace ZamfaraIRS.Services
         public async Task<KekeStatusResponse> GetKekeStatusAsync(string kekeNo, string concode)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"api/KekeTransactions/GetKekeCount?KekeNo={Uri.EscapeDataString(kekeNo)}");
-            request.Headers.Add("Concode", concode); 
+            request.Headers.Add("Concode", "9LF299r0afwIXMN"); 
 
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode) return null;
@@ -48,14 +48,14 @@ namespace ZamfaraIRS.Services
                 content.Add(new StringContent(serviceName), "ServiceName");
                 content.Add(new StringContent(email), "Email");
                 content.Add(new StringContent(amount.ToString()), "Amount");
-                content.Add(new StringContent(payerId), "Payer"); // Registration number or Driver ID
+                content.Add(new StringContent(payerId), "Payer"); 
                 content.Add(new StringContent(pin), "Pin");
 
                 var request = new HttpRequestMessage(HttpMethod.Post, "api/KekeTransactions/Post/v3/KekeTransact")
                 {
                     Content = content
                 };
-                request.Headers.Add("Concode", concode); // Required connection code
+                request.Headers.Add("Concode", "9LF299r0afwIXMN"); // Required connection code
 
                 // Note: The external service has a 10-minute timeout; apply reasonable client-side timeout
                 var response = await _httpClient.SendAsync(request);

@@ -43,7 +43,7 @@
                             <Frame Grid.Column="0" Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
                                 <Entry Text="{Binding PayerId}" Placeholder="Enter Payer ID" IsReadOnly="{Binding IsVerified}" FontSize="13" FontAttributes="Bold" TextTransform="Uppercase" />
                             </Frame>
-                            <Button Grid.Column="1" Text="VERIFY" Command="{Binding VerifyPayerCommand}" IsVisible="{Binding IsNotVerified}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" />
+                            <Button Grid.Column="1" Text="VERIFY" Clicked="Button_Clicked_1" IsVisible="{Binding IsNotVerified}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="8" />
                         </Grid>
 
                         <Label Text=" Agent PIN" FontSize="11" FontAttributes="Bold" TextColor="#374151" />

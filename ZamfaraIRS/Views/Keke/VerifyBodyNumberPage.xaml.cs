@@ -71,8 +71,10 @@ namespace ZamfaraIRS.Views.Keke
             HasResult = false;
             try
             {
+
                 string concode = "9LF299r0afwIXMN";
                 var result = await _kekeService.GetKekeStatusAsync(BodyNumberInput.Trim().ToUpper(), concode);
+
 
                 if (result != null && (result.Status == "00" || result.Status == "01"))
                 {
