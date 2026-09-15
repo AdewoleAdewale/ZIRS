@@ -46,9 +46,10 @@ namespace ZamfaraIRS.Views.Keke
 
             try
             {
-                // The API requires "dd-MM-yyyy" based on your sample
-                string formattedStart = StartDate.ToString("dd-MM-yyyy");
-                string formattedEnd = EndDate.ToString("dd-MM-yyyy");
+                // FIX: Enforce the strict yyyy-MM-dd format required by the API
+                string formattedStart = StartDate.ToString("yyyy-MM-dd");
+                string formattedEnd = EndDate.ToString("yyyy-MM-dd");
+
                 string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
 
                 var results = await _kekeService.GetKekeTransactionsAsync(agentEmail, formattedStart, formattedEnd);

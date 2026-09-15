@@ -112,10 +112,10 @@
                                     <!-- Details Grid -->
                                     <Grid RowDefinitions="Auto, Auto, Auto, Auto" ColumnDefinitions="80, *" RowSpacing="8">
                                         <Label Grid.Row="0" Grid.Column="0" Text="Trans ID:" FontSize="11" TextColor="Gray" />
-                                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding TransactionNo}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />
+                                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding TransactionId}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />
 
                                         <Label Grid.Row="1" Grid.Column="0" Text="Business:" FontSize="11" TextColor="Gray" />
-                                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding Business}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />
+                                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding BusinessName}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />
 
                                         <Label Grid.Row="2" Grid.Column="0" Text="Payer ID:" FontSize="11" TextColor="Gray" />
                                         <Label Grid.Row="2" Grid.Column="1" Text="{Binding PayerId}" FontSize="11" FontAttributes="Bold" TextColor="#111827" />

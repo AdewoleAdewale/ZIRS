@@ -193,7 +193,7 @@ namespace ZamfaraIRS.Views.Keke
                     vehiclePlateNo: VerificationResult.KekeNo,
                     serviceName: VerificationResult.ServiceName,
                     amountPaid: TotalAmountToPay,
-                    lga: "ZIRS Collection",
+                    lga: MainPage.CollectionPoint,
                     agentEmail: agentEmail,
                     isReprint: false
                 );

@@ -167,14 +167,14 @@ namespace ZamfaraIRS.Views.Keke
 
                 if (response != null && response.RespondCode == "00")
                 {
-                    await DisplayAlert("Payment Successful", response.Message, "OK");
+                    await DisplayAlert("Payment Successful", response.Message, "Print Reciept");
 
                     await ShopReceiptPrinter.PrintKekeReceiptAsync(
                         transactionNo: response.TransactionNo ?? $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
                         vehiclePlateNo: PayerId.Trim().ToUpper(),
                         serviceName: SelectedService.ServiceName,
                         amountPaid: amount,
-                        lga: "ZIRS Collection",
+                        lga: MainPage.CollectionPoint,
                         agentEmail: agentEmail,
                         isReprint: false
                     );
