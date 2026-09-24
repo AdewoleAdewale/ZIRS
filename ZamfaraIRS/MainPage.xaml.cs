@@ -484,6 +484,8 @@ namespace ZamfaraIRS
             }
         }
 
+
+
         private async Task HandleLoginResponse(LoginResponse result, string rawJson, string email, string password)
         {
             if (result.responseCode == "00" && result.agent != null)

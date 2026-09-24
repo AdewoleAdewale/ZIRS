@@ -141,6 +141,13 @@ namespace ZamfaraIRS.Views.Keke
                 return;
             }
 
+            if (TotalAmountToPay < 50m)
+            {
+                ErrorMessage = "Invalid amount. Payments less than ₦50 are not allowed. Please verify the rate or select more days.";
+                ShowErrorSheet = true;
+                return;
+            }
+
             IsBusy = true;
             ShowPaymentSheet = false;
 

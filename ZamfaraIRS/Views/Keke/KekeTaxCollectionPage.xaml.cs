@@ -149,17 +149,27 @@ namespace ZamfaraIRS.Views.Keke
                 return;
             }
 
+          
+            decimal.TryParse(SelectedService.ServiceAmount?.Replace(",", ""), out decimal amount);
+
+         
+            if (amount < 50m)
+            {
+                ErrorMessage = "Invalid amount. Payments less than ₦50 are not allowed. Please choose another service or enter a valid amount.";
+                ShowErrorSheet = true;
+                return;
+            }
+
             IsBusy = true;
             try
             {
                 string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
-                string concode = MainPage.Super_Agent ?? "9LF299r0afwIXMN";
-                decimal.TryParse(SelectedService.ServiceAmount?.Replace(",", ""), out decimal amount);
+                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
 
                 var response = await _kekeService.SubmitKekeTransactionAsync(
                     SelectedService.ServiceName,
                     agentEmail,
-                    amount,
+                    amount, // This now passes the validated, non-zero amount
                     PayerId.Trim().ToUpper(),
                     PinInput,
                     concode
@@ -167,14 +177,15 @@ namespace ZamfaraIRS.Views.Keke
 
                 if (response != null && response.RespondCode == "00")
                 {
-                    await DisplayAlert("Payment Successful", response.Message, "Print Reciept");
+                    await DisplayAlert("Payment Successful", response.Message, "OK");
 
+                    // Receipt will now correctly print the actual amount paid
                     await ShopReceiptPrinter.PrintKekeReceiptAsync(
                         transactionNo: response.TransactionNo ?? $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
                         vehiclePlateNo: PayerId.Trim().ToUpper(),
                         serviceName: SelectedService.ServiceName,
                         amountPaid: amount,
-                        lga: MainPage.CollectionPoint,
+                        lga: "ZIRS Collection",
                         agentEmail: agentEmail,
                         isReprint: false
                     );
@@ -183,27 +194,20 @@ namespace ZamfaraIRS.Views.Keke
                 }
                 else
                 {
-                    Device.BeginInvokeOnMainThread(() =>
-                    {
-                        ErrorMessage = response?.ResponseMessage ?? response?.Message ?? "Insufficient Super Agent wallet balance or transaction failed.";
-                        ShowErrorSheet = true;
-                    });
+                    ErrorMessage = response?.ResponseMessage ?? "Transaction failed.";
+                    ShowErrorSheet = true;
                 }
             }
             catch (Exception ex)
             {
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    ErrorMessage = $"Transaction Failed: {ex.Message}";
-                    ShowErrorSheet = true;
-                });
+                ErrorMessage = $"Transaction Failed: {ex.Message}";
+                ShowErrorSheet = true;
             }
             finally
             {
-                Device.BeginInvokeOnMainThread(() => IsBusy = false);
+                IsBusy = false;
             }
         }
-
         // Direct Click handler to dismiss the popup reliably
         public void OnCloseSheetsClicked(object sender, EventArgs e)
         {
