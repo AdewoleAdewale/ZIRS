@@ -44,6 +44,8 @@ namespace ZamfaraIRS.Views.Keke
             {
                 await LoadServicesAsync();
             }
+
+        
         }
 
         private async Task LoadServicesAsync()

@@ -115,6 +115,8 @@ namespace ZamfaraIRS.Views.Keke
             ShowSuccessSheet = false;
         }
 
+
+
         private void CalculateTotal()
         {
             if (VerificationResult != null && decimal.TryParse(VerificationResult.ServiceAmt, out decimal rate))

@@ -32,7 +32,8 @@
 
                         <Label Text="Service Amount (₦)" FontSize="11" FontAttributes="Bold" TextColor="#374151" />
                         <Frame Padding="15,0" CornerRadius="8" BackgroundColor="White" HasShadow="True" BorderColor="#E5E7EB" HeightRequest="45">
-                            <Entry Text="{Binding SelectedService.ServiceAmount, StringFormat='₦{0}'}" IsReadOnly="True" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
+                          
+                            <Entry Text="{Binding SelectedService.ServiceAmount, StringFormat='₦{0}', Mode=OneWay}" IsReadOnly="True" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
                         </Frame>
 
 

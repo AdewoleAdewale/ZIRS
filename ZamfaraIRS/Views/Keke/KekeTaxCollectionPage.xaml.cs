@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xamarin.Forms;
@@ -91,6 +93,24 @@ namespace ZamfaraIRS.Views.Keke
             BindingContext = this;
         }
 
+        /// <summary>
+        /// Strips currency symbols, thousands separators and stray whitespace before parsing,
+        /// so a display-formatted amount (e.g. "₦1,000") never silently becomes 0.
+        /// Requires the source property to actually hold an unformatted value at runtime —
+        /// see the XAML fix (Mode=OneWay) that stops the display format being written back.
+        /// </summary>
+        private static bool TryParseAmount(string raw, out decimal amount)
+        {
+            amount = 0m;
+            if (string.IsNullOrWhiteSpace(raw)) return false;
+
+            // Keep only digits and a decimal point.
+            var cleaned = new string(raw.Where(c => char.IsDigit(c) || c == '.').ToArray());
+
+            return decimal.TryParse(cleaned, NumberStyles.Number, CultureInfo.InvariantCulture, out amount)
+                   && amount > 0;
+        }
+
         private async Task ExecuteVerifyAsync()
         {
             SessionManager.Instance.UpdateActivity();
@@ -149,14 +169,36 @@ namespace ZamfaraIRS.Views.Keke
                 return;
             }
 
-          
-            decimal.TryParse(SelectedService.ServiceAmount?.Replace(",", ""), out decimal amount);
+            if (!TryParseAmount(SelectedService?.ServiceAmount, out decimal amount))
+            {
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    ErrorMessage = "Could not read a valid amount for this service. Please go back and re-select the service.";
+                    ShowErrorSheet = true;
+                });
+                return;
+            }
 
-         
             if (amount < 50m)
             {
-                ErrorMessage = "Invalid amount. Payments less than ₦50 are not allowed. Please choose another service or enter a valid amount.";
-                ShowErrorSheet = true;
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    ErrorMessage = "Invalid amount. Payments less than ₦50 are not allowed. Please choose another service or enter a valid amount.";
+                    ShowErrorSheet = true;
+                });
+                return;
+            }
+
+            // concode must match a real, verified agent context — never fall back to a placeholder
+            // that's guaranteed to fail server-side, since that produces a confusing error far from
+            // its real cause (an expired/missing session).
+            if (string.IsNullOrWhiteSpace(MainPage.Super_Agent))
+            {
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    ErrorMessage = "Your session appears to have expired. Please log in again before making a payment.";
+                    ShowErrorSheet = true;
+                });
                 return;
             }
 
@@ -164,50 +206,57 @@ namespace ZamfaraIRS.Views.Keke
             try
             {
                 string agentEmail = MainPage.ValidUserMail ?? SessionService.SavedEmail ?? "agent@example.com";
-                string concode = MainPage.Super_Agent ?? "UNKNOWN_CONCODE";
+                string concode = MainPage.Super_Agent;
 
                 var response = await _kekeService.SubmitKekeTransactionAsync(
                     SelectedService.ServiceName,
                     agentEmail,
-                    amount, // This now passes the validated, non-zero amount
+                    amount, // validated, non-zero, correctly parsed amount
                     PayerId.Trim().ToUpper(),
                     PinInput,
                     concode
                 );
 
-                if (response != null && response.RespondCode == "00")
+                Device.BeginInvokeOnMainThread(async () =>
                 {
-                    await DisplayAlert("Payment Successful", response.Message, "OK");
+                    if (response != null && response.RespondCode == "00")
+                    {
+                        await DisplayAlert("Payment Successful", response.Message, "OK");
 
-                    // Receipt will now correctly print the actual amount paid
-                    await ShopReceiptPrinter.PrintKekeReceiptAsync(
-                        transactionNo: response.TransactionNo ?? $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
-                        vehiclePlateNo: PayerId.Trim().ToUpper(),
-                        serviceName: SelectedService.ServiceName,
-                        amountPaid: amount,
-                        lga: "ZIRS Collection",
-                        agentEmail: agentEmail,
-                        isReprint: false
-                    );
+                        // Receipt now correctly prints the actual amount paid
+                        await ShopReceiptPrinter.PrintKekeReceiptAsync(
+                            transactionNo: response.TransactionNo ?? $"TX-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
+                            vehiclePlateNo: PayerId.Trim().ToUpper(),
+                            serviceName: SelectedService.ServiceName,
+                            amountPaid: amount,
+                            lga: "ZIRS Collection",
+                            agentEmail: agentEmail,
+                            isReprint: false
+                        );
 
-                    await Navigation.PopToRootAsync();
-                }
-                else
-                {
-                    ErrorMessage = response?.ResponseMessage ?? "Transaction failed.";
-                    ShowErrorSheet = true;
-                }
+                        await Navigation.PopToRootAsync();
+                    }
+                    else
+                    {
+                        ErrorMessage = response?.ResponseMessage ?? "Transaction failed.";
+                        ShowErrorSheet = true;
+                    }
+                });
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Transaction Failed: {ex.Message}";
-                ShowErrorSheet = true;
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    ErrorMessage = $"Transaction Failed: {ex.Message}";
+                    ShowErrorSheet = true;
+                });
             }
             finally
             {
-                IsBusy = false;
+                Device.BeginInvokeOnMainThread(() => IsBusy = false);
             }
         }
+
         // Direct Click handler to dismiss the popup reliably
         public void OnCloseSheetsClicked(object sender, EventArgs e)
         {
@@ -218,9 +267,6 @@ namespace ZamfaraIRS.Views.Keke
                 ShowErrorSheet = false;
             });
         }
-
-
-
 
         private async void Button_Clicked(object sender, EventArgs e)
         {
