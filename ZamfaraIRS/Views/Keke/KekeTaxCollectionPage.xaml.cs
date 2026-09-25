@@ -283,5 +283,29 @@ namespace ZamfaraIRS.Views.Keke
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+
+        // In KekeTaxCollectionPage.xaml.cs
+        private async void OnTestPrintClicked(object sender, EventArgs e)
+        {
+            SessionManager.Instance.UpdateActivity();
+            IsBusy = true;
+            try
+            {
+                bool success = await ShopReceiptPrinter.TestKekeWatermarkPrintAsync();
+                if (success)
+                {
+                    await DisplayAlert("Success", "Test watermark receipt sent to printer.", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Printer failed or is disconnected.", "OK");
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
     }
 }

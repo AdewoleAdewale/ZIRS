@@ -1,5 +1,6 @@
 ﻿using Android.Bluetooth;
 using Android.Graphics;
+using Android.OS;
 using Java.Util;
 using Newtonsoft.Json;
 using System;
@@ -221,6 +222,62 @@ namespace ZamfaraIRS.Services
 
         #endregion
 
+        private const int BT_POWERON_POLL_MS = 250;
+        private const int BT_POWERON_MAX_POLLS = 24;      // ~6s ceiling
+        private const int BT_BOND_LIST_SETTLE_MS = 600;   // bonded list can be empty for a beat right after power-on
+
+        /// <summary>
+        /// Same checks as the old EnsureBluetoothReady(), but for API ≤ 30 it
+        /// force-powers the adapter instead of just throwing when it's off.
+        /// Call this INSTEAD of EnsureBluetoothReady() from the print entry
+        /// points; keep the old sync method for anything that still needs it.
+        /// </summary>
+        private async Task EnsureBluetoothReadyAsync(CancellationToken token)
+        {
+            var adapter = BluetoothAdapter.DefaultAdapter
+                ?? throw new PrinterException("Device has no Bluetooth adapter.");
+
+            if (!adapter.IsEnabled)
+            {
+                int sdk = (int)Build.VERSION.SdkInt;
+
+                if (sdk < 31)
+                {
+                    // Pre-Android 12: BLUETOOTH_ADMIN is enough to power the
+                    // radio on directly. Many locked-down POS ROMs on 7/8 ship
+                    // with Bluetooth off by default and no Settings shortcut
+                    // for the cashier, so this is the "force" the ticket asks for.
+                    Log("Bluetooth is off — forcing silent enable (API < 31).");
+                    adapter.Enable();
+
+                    for (int i = 0; i < BT_POWERON_MAX_POLLS && !adapter.IsEnabled; i++)
+                        await Task.Delay(BT_POWERON_POLL_MS, token);
+
+                    if (!adapter.IsEnabled)
+                        throw new PrinterException(
+                            "Bluetooth radio did not power on in time. Toggle it manually and retry.");
+
+                    // Give the stack a moment to repopulate the bonded-device
+                    // cache — right after Enable() this can briefly be empty
+                    // even though pairing is still intact.
+                    await Task.Delay(BT_BOND_LIST_SETTLE_MS, token);
+                }
+                else
+                {
+                    // API 31+: Android requires the user to confirm via the
+                    // system "Allow app to turn on Bluetooth?" dialog. We
+                    // can't (and shouldn't try to) bypass that.
+                    throw new PrinterException(
+                        "Bluetooth is off. Please enable it — Android 12+ requires confirming the system prompt.");
+                }
+            }
+
+            if (FindPrinterDevice(adapter) == null)
+                throw new PrinterException(
+                    "No paired printer found. Pair the printer in Android Settings first.");
+        }
+
+
         #region ── Fields ─────────────────────────────────────────────────────
 
         private readonly int _printerDots;
@@ -324,6 +381,57 @@ namespace ZamfaraIRS.Services
                         result.TotalChunks));
         }
 
+
+        private List<ReceiptLine> BuildReceiptTextLines(ReceiptData receipt)
+        {
+            var lines = new List<ReceiptLine>();
+            void Add(string text, bool bold = false, bool center = false,
+                     string right = null, bool dh = false)
+                => lines.Add(new ReceiptLine
+                {
+                    Text = text,
+                    Right = right,
+                    Bold = bold,
+                    Center = center,
+                    DoubleHeight = dh
+                });
+            void Rule() => lines.Add(new ReceiptLine { IsDivider = true });
+
+            Add(receipt.StoreName, bold: true, center: true);
+            if (!string.IsNullOrWhiteSpace(receipt.StorePhone))
+                Add(receipt.StorePhone, center: true);
+            Rule();
+            Add("OFFICIAL RECEIPT", bold: true, center: true, dh: true);
+            Rule();
+            Add("Date  : " + receipt.PrintDate.ToString("dd/MM/yyyy HH:mm:ss"));
+            Add("Ref   : " + receipt.ReceiptNumber);
+            Add("Agent : " + receipt.AgentName);
+            Add("Point : " + receipt.CollectionPoint);
+            Rule();
+
+            foreach (var item in receipt.Items)
+            {
+                if (item.Amount == 0m && !string.IsNullOrWhiteSpace(item.SubText))
+                {
+                    Add(item.Description + ": " + item.SubText, center: true);
+                }
+                else
+                {
+                    Add(item.Description, right: "N" + item.Amount.ToString("###,###.00"));
+                    if (!string.IsNullOrWhiteSpace(item.SubText))
+                        Add("  " + item.SubText);
+                }
+            }
+
+            Rule();
+            if (receipt.AmountPaid > 0m)
+                Add("AMOUNT PAID", bold: true, right: "N" + receipt.AmountPaid.ToString("###,###.00"));
+            Rule();
+            Add(receipt.FooterLine2 ?? " POWERED BY OSOFTPAY ", bold: true, center: true);
+            Rule();
+
+            return lines;
+        }
         // =====================================================================
         //  IPrinterService  –  PrintTestPageAsync  (with PrintRetryPolicy)
         // =====================================================================
@@ -358,6 +466,113 @@ namespace ZamfaraIRS.Services
             finally { cts.Dispose(); }
         }
 
+
+        private Bitmap ComposeWatermarkedBitmap(List<ReceiptLine> lines, string watermarkText, int width)
+        {
+            using (var normalPaint = new Paint(PaintFlags.AntiAlias)
+            {
+                TextSize = 26,
+                Color = Color.Black,
+            })
+            using (var boldPaint = new Paint(PaintFlags.AntiAlias)
+            {
+                TextSize = 26,
+                Color = Color.Black,
+                FakeBoldText = true,
+            })
+            using (var dhPaint = new Paint(PaintFlags.AntiAlias)
+            {
+                TextSize = 34,
+                Color = Color.Black,
+                FakeBoldText = true,
+            })
+            {
+                normalPaint.SetTypeface(Typeface.Monospace);
+                boldPaint.SetTypeface(Typeface.Monospace);
+                dhPaint.SetTypeface(Typeface.Monospace);
+
+                var fm = normalPaint.GetFontMetrics();
+                int lineHeight = (int)Math.Ceiling(fm.Descent - fm.Ascent) + 8;
+                int dividerGap = 10;
+                const int margin = 14;
+
+                int height = margin * 2;
+                foreach (var l in lines)
+                    height += l.IsDivider ? dividerGap : (l.DoubleHeight ? lineHeight + 12 : lineHeight);
+
+                var bmp = Bitmap.CreateBitmap(width, height, Bitmap.Config.Argb8888);
+                var canvas = new Canvas(bmp);
+                canvas.DrawColor(Color.White);
+
+                // ---- watermark layer: drawn first == underneath ----
+                DrawTiledWatermark(canvas, width, height, watermarkText);
+
+                // ---- receipt content on top ----
+                int y = margin - (int)fm.Ascent;
+                foreach (var l in lines)
+                {
+                    if (l.IsDivider)
+                    {
+                        using (var rulePaint = new Paint { Color = Color.Black, StrokeWidth = 2 })
+                            canvas.DrawLine(margin, y - lineHeight / 3f, width - margin, y - lineHeight / 3f, rulePaint);
+                        y += dividerGap;
+                        continue;
+                    }
+
+                    var paint = l.DoubleHeight ? dhPaint : (l.Bold ? boldPaint : normalPaint);
+                    int rowHeight = l.DoubleHeight ? lineHeight + 12 : lineHeight;
+
+                    if (l.Right != null)
+                    {
+                        float rightWidth = paint.MeasureText(l.Right);
+                        canvas.DrawText(l.Text, margin, y, paint);
+                        canvas.DrawText(l.Right, width - margin - rightWidth, y, paint);
+                    }
+                    else
+                    {
+                        float textWidth = paint.MeasureText(l.Text);
+                        float x = l.Center ? (width - textWidth) / 2f : margin;
+                        canvas.DrawText(l.Text, x, y, paint);
+                    }
+
+                    y += rowHeight;
+                }
+
+                canvas.Save();
+                return bmp;
+            }
+        }
+
+        private static void DrawTiledWatermark(Canvas canvas, int width, int height, string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+
+            using (var wmPaint = new Paint(PaintFlags.AntiAlias)
+            {
+                Color = Color.Black,
+                TextSize = 30,
+            })
+            {
+                wmPaint.SetStyle(Paint.Style.Stroke);
+                wmPaint.StrokeWidth = 1f;
+                wmPaint.SetTypeface(Typeface.DefaultBold);
+
+                canvas.Save();
+                canvas.Rotate(-30, width / 2f, height / 2f);
+
+                float textWidth = wmPaint.MeasureText(text);
+                float stepX = textWidth + 70;
+                float stepY = 100;
+                float diag = (float)Math.Sqrt((double)width * width + (double)height * height);
+
+                for (float ty = -diag; ty < diag; ty += stepY)
+                    for (float tx = -diag; tx < diag; tx += stepX)
+                        canvas.DrawText(text, tx, ty, wmPaint);
+
+                canvas.Restore();
+            }
+        }
+
         // =====================================================================
         //  RETRY CONFIGURATION
         // =====================================================================
@@ -372,7 +587,7 @@ namespace ZamfaraIRS.Services
         public async Task PrintReceiptAsync(
             ReceiptData receipt,
             string logoAssetName = "Logo.png",
-            string watermarkText = "YOBE IRS",
+            string watermarkText = "ZIRS",
             CancellationToken cancellationToken = default)
         {
             var result = await PrintReceiptAsync(
@@ -516,7 +731,7 @@ namespace ZamfaraIRS.Services
                             Log(string.Format("Confirmed: {0}. Progress {1}/{2}.", chunk, state.CompletedCount, total));
                             break;
                         }
-                        catch (OperationCanceledException)
+                        catch (System.OperationCanceledException)
                         {
                             ReportProgress(progress, chunk.Label, chunkType,
                                            state.CompletedCount, total, attempt,
@@ -948,7 +1163,7 @@ namespace ZamfaraIRS.Services
                     throw new PrinterException("Bluetooth connection timed out.");
                 await connectTask;
             }
-            catch (OperationCanceledException)
+            catch (System.OperationCanceledException)
             {
                 throw new PrinterException("Bluetooth connection timed out.");
             }
@@ -1011,6 +1226,99 @@ namespace ZamfaraIRS.Services
             finally { ms.Dispose(); }
         }
 
+        private struct ReceiptLine
+        {
+            public string Text;
+            public string Right;      // set for two-column rows (desc + amount)
+            public bool Bold;
+            public bool Center;
+            public bool DoubleHeight;
+            public bool IsDivider;    // full-width horizontal rule instead of text
+        }
+
+
+        private List<PrintChunk> BuildWatermarkedReceiptChunks(
+          ReceiptData receipt, string watermarkText, string logoAssetName)
+        {
+            var chunks = new List<PrintChunk>();
+
+            chunks.Add(Chunk(PrintSection.Init, "Init", ms => ms.Write(CMD_INIT)));
+
+            // Logo stays a separate raster block ahead of the watermarked body —
+            // it's a fixed asset, not part of what needs the watermark under it.
+            if (!string.IsNullOrWhiteSpace(logoAssetName))
+            {
+                var logoCmd = TryBuildLogoCommand(logoAssetName, maxWidth: 180);
+                if (logoCmd != null)
+                    chunks.Add(new PrintChunk(PrintSection.Logo, "Logo", logoCmd));
+            }
+
+            var lines = BuildReceiptTextLines(receipt);
+            using (var bitmap = ComposeWatermarkedBitmap(lines, watermarkText, _printerDots))
+            {
+                chunks.AddRange(SliceBitmapToRasterChunks(bitmap));
+            }
+
+            chunks.Add(Chunk(PrintSection.FeedAndCut, "FeedAndCut", ms =>
+            {
+                ms.Write(CMD_LF);
+                ms.Write(CMD_LF);
+                ms.Write(CMD_FEED_CUT);
+            }));
+
+            return chunks;
+        }
+
+        private const int WATERMARK_BAND_ROWS = 120;
+
+        private List<PrintChunk> SliceBitmapToRasterChunks(Bitmap bmp)
+        {
+            int w = bmp.Width, h = bmp.Height;
+            int widthBytes = w / 8;
+            var chunks = new List<PrintChunk>();
+            int band = 0;
+
+            for (int startY = 0; startY < h; startY += WATERMARK_BAND_ROWS)
+            {
+                int bandHeight = Math.Min(WATERMARK_BAND_ROWS, h - startY);
+                var pixels = new int[w * bandHeight];
+                bmp.GetPixels(pixels, 0, w, 0, startY, w, bandHeight);
+
+                byte[] raster = new byte[widthBytes * bandHeight];
+                for (int y = 0; y < bandHeight; y++)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        int pixel = pixels[y * w + x];
+                        float luma = 0.299f * ((pixel >> 16) & 0xFF)
+                                   + 0.587f * ((pixel >> 8) & 0xFF)
+                                   + 0.114f * (pixel & 0xFF);
+                        if (luma < MONO_THRESHOLD)
+                            raster[y * widthBytes + x / 8] |= (byte)(1 << (7 - x % 8));
+                    }
+                }
+
+                var ms = new MemoryStream();
+                try
+                {
+                    byte xL = (byte)(widthBytes & 0xFF);
+                    byte xH = (byte)((widthBytes >> 8) & 0xFF);
+                    byte yL = (byte)(bandHeight & 0xFF);
+                    byte yH = (byte)((bandHeight >> 8) & 0xFF);
+                    ms.Write(new byte[] { 0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH }, 0, 8);
+                    ms.Write(raster, 0, raster.Length);
+
+                    chunks.Add(new PrintChunk(
+                        PrintSection.Body,
+                        string.Format("WM_Band_{0}", band++),
+                        ms.ToArray()));
+                }
+                finally { ms.Dispose(); }
+            }
+
+            return chunks;
+        }
+
         private static string Col(string label, string value, int width)
         {
             string full = string.Format("{0,-8}: {1}", label, value);
@@ -1061,6 +1369,50 @@ namespace ZamfaraIRS.Services
             ClearActiveJob();
             GC.SuppressFinalize(this);
         }
+
+        public async Task<PrintSessionResult> PrintReceiptWithWatermarkAsync(
+       ReceiptData receipt,
+       string watermarkText = "ZIRS",
+       string logoAssetName = "Logo.png",
+       PrintRetryPolicy retryPolicy = null,
+       IProgress<PrintProgress> progress = null,
+       CancellationToken cancellationToken = default)
+        {
+            var policy = retryPolicy ?? PrintRetryPolicy.Default;
+            MaxChunkRetries = policy.MaxAttempts;
+            RetryBaseDelayMs = policy.RetryDelayMs;
+
+            await RequireBluetoothPermissionsStaticAsync();
+            await EnsureBluetoothReadyAsync(cancellationToken);
+
+            string jobId = string.Format("wm_receipt_{0:yyyyMMddHHmmssff}", DateTime.UtcNow);
+            var chunks = await Task.Run(
+                () => BuildWatermarkedReceiptChunks(receipt, watermarkText, logoAssetName),
+                cancellationToken);
+            var state = new PrintJobState(jobId);
+
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            try
+            {
+                cts.CancelAfter(PRINT_TIMEOUT_MS);
+                var result = await PrintChunksAsync(chunks, state, progress, cts.Token);
+                if (!result.Success)
+                    throw new PrinterException(
+                        string.Format("Watermarked print failed at '{0}': {1} ({2}/{3} bands sent)",
+                            result.FailedChunkLabel, result.ErrorMessage,
+                            result.ChunksSent, result.TotalChunks));
+                return result;
+            }
+            finally { cts.Dispose(); }
+        }
+
+        private static Task RequireBluetoothPermissionsStaticAsync()
+         => BluetoothPermissionHelper.RequestAsync().ContinueWith(t =>
+         {
+             if (!t.Result)
+                 throw new PrinterException(
+                     "Bluetooth permission denied. On Android 12+ go to App Settings → Permissions → Nearby devices and allow.");
+         });
     }
 
     // =========================================================================
@@ -1131,4 +1483,6 @@ namespace ZamfaraIRS.Services
         public PrinterException(string message) : base(message) { }
         public PrinterException(string message, Exception inner) : base(message, inner) { }
     }
+
+
 }

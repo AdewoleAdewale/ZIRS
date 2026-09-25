@@ -54,6 +54,9 @@
 
                         <Button Text="PROCESS PAYMENT" Clicked="Button_Clicked" IsEnabled="{Binding IsVerified}" BackgroundColor="#064E3B" TextColor="White" CornerRadius="12" HeightRequest="55" FontAttributes="Bold" Margin="0,15,0,0" />
 
+                        <!-- Add this temporary test button -->
+                        <Button Text="TEST WATERMARK PRINT" Clicked="OnTestPrintClicked" BackgroundColor="#F59E0B" TextColor="White" CornerRadius="12" HeightRequest="55" FontAttributes="Bold" Margin="0,10,0,0" />
+
                         <Label Text="🔒 Secure encrypted transaction" TextColor="#059669" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,10,0,20"/>
                     </StackLayout>
                 </ScrollView>
@@ -92,6 +95,8 @@
                             HeightRequest="45" 
                             FontAttributes="Bold" 
                             Margin="0,10,0,0" />
+                    
+                    
                 </StackLayout>
             </Frame>
         </ContentView>
