@@ -142,6 +142,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\ZamfaraIRS.Android.TrenditBinding\ZamfaraIRS.Android.TrenditBinding.csproj" />
     <ProjectReference Include="..\ZamfaraIRS\ZamfaraIRS.csproj">
       <Project>{37730A1A-8CD8-4679-8C8B-63D188A37AE9}</Project>
       <Name>ZamfaraIRS</Name>
