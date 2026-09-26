@@ -34,7 +34,7 @@ namespace ZamfaraIRS.Services
         public static string ReceiptPhone => $"Contact us: {SupportPhone1}, {SupportPhone2}";
         public const string ReceiptFooterLine1 = "Thank You!";
         public const string ReceiptFooterLine2 = "POWERED BY OSOFTPAY";
-        public const string ReceiptWatermark = OrganisationAbbr;
+        public const string ReceiptWatermark = OrganisationAbbr + " Services";
         public const string ReceiptLogoAsset = "Logo.png";
 
         // ── API endpoints ────────────────────────────────────────

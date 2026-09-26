@@ -2,12 +2,61 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Xamarin.Forms;
 using ZamfaraIRS.Models;
 using ZamfaraIRS.Services;
 namespace ZamfaraIRS.Services
 {
     public static class ShopReceiptPrinter
     {
+        // ─────────────────────────────────────────────────────────────────
+        //  PAYMENT RECEIPT ROUTING  (Kekemudu + Shop payment receipts only —
+        //  registrations don't go through this and get no watermark)
+        //
+        //  1. Try the shared Bluetooth printer service first (mobile phone
+        //     paired to an external printer, e.g. MP-58T) with the vertical
+        //     bold watermark underneath the receipt.
+        //  2. If that fails (no paired printer, or the print itself fails),
+        //     fall back to the Trendit S680's built-in printer via the
+        //     POS SDK — also with the watermark underneath.
+        // ─────────────────────────────────────────────────────────────────
+        private static async Task<bool> PrintPaymentReceiptWithFallbackAsync(
+            ReceiptData receipt, string logoAssetName = "Logo.png")
+        {
+            // 1 ── Shared Bluetooth service (mobile printer path)
+            try
+            {
+                using (var bluetoothPrinter = new BluetoothPrinterService(use80mm: false))
+                {
+                    if (await bluetoothPrinter.IsPrinterAvailableAsync())
+                    {
+                        var result = await bluetoothPrinter.PrintReceiptWithWatermarkAsync(
+                            receipt,
+                            watermarkText: BrandConfig.ReceiptWatermark,
+                            logoAssetName: logoAssetName);
+
+                        if (result.Success) return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ShopReceiptPrinter] Bluetooth print failed, falling back to Trendit SDK: {ex.Message}");
+            }
+
+            // 2 ── Fall back to the Trendit POS SDK (built-in printer)
+            var internalPrinter = DependencyService.Get<IInternalPrinterService>();
+            if (internalPrinter != null && internalPrinter.IsSmartPOSTerminal())
+            {
+                return await internalPrinter.PrintReceiptAsync(
+                    receipt,
+                    logoAssetName: logoAssetName,
+                    watermarkText: BrandConfig.ReceiptWatermark);
+            }
+
+            return false;
+        }
+
         public static async Task<bool> PrintShopRegistrationReceiptAsync(
             string businessName,
             string payerId,
@@ -15,17 +64,17 @@ namespace ZamfaraIRS.Services
             string agentEmail,
             bool isReprint = false)
         {
-            var receipt = ReceiptPrinter.CreateBrandedReceipt(); 
+            var receipt = ReceiptPrinter.CreateBrandedReceipt();
             receipt.ReceiptBannerText = isReprint ? "SHOP REGISTRATION (REPRINT)" : "SHOP REGISTRATION";
-            receipt.ReceiptNumber = payerId; 
-            receipt.AgentName = MainPage.Name; 
+            receipt.ReceiptNumber = payerId;
+            receipt.AgentName = MainPage.Name;
             receipt.CollectionPoint = marketName;
             receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/SingleCollections/Verify?TransactId={payerId}";
 
             if (isReprint)
             {
-                receipt.FooterLine1 = "*** REPRINTED RECEIPT ***"; 
-                receipt.FooterLine2 = $"Reprinted: {DateTime.Now:dd MMM yyyy HH:mm} | POWERED BY OSOFTPAY"; 
+                receipt.FooterLine1 = "*** REPRINTED RECEIPT ***";
+                receipt.FooterLine2 = $"Reprinted: {DateTime.Now:dd MMM yyyy HH:mm} | POWERED BY OSOFTPAY";
             }
 
             receipt.Items.Add(new ReceiptItem
@@ -56,7 +105,7 @@ namespace ZamfaraIRS.Services
                 SubText = DateTime.Now.ToString("dd MMM yyyy HH:mm")
             });
 
-            return await ReceiptPrinter.PrintAsync(receipt); 
+            return await ReceiptPrinter.PrintAsync(receipt);
         }
 
         public static async Task<bool> PrintShopPaymentReceiptAsync(
@@ -70,20 +119,20 @@ namespace ZamfaraIRS.Services
             string agentEmail,
             bool isReprint = false)
         {
-            var receipt = ReceiptPrinter.CreateBrandedReceipt(); 
-            receipt.ReceiptBannerText = isReprint ? "SHOP REPAYMENT (REPRINT)" : "OFFICIAL REPAYMENT RECEIPT"; 
-            receipt.ReceiptNumber = refNo; 
-            receipt.AgentName = MainPage.Name; 
-            receipt.CollectionPoint = marketName; 
-            receipt.TotalAmount = amountPaid + balanceRemaining; 
-            receipt.AmountPaid = amountPaid; 
+            var receipt = ReceiptPrinter.CreateBrandedReceipt();
+            receipt.ReceiptBannerText = isReprint ? "SHOP REPAYMENT (REPRINT)" : "OFFICIAL REPAYMENT RECEIPT";
+            receipt.ReceiptNumber = refNo;
+            receipt.AgentName = MainPage.Name;
+            receipt.CollectionPoint = marketName;
+            receipt.TotalAmount = amountPaid + balanceRemaining;
+            receipt.AmountPaid = amountPaid;
             receipt.AmountLeft = balanceRemaining;
             receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/SingleCollections/Verify?TransactId={refNo}";
 
             if (isReprint)
             {
-                receipt.FooterLine1 = "*** REPRINTED RECEIPT ***"; 
-                receipt.FooterLine2 = $"Reprinted: {DateTime.Now:dd MMM yyyy HH:mm} | POWERED BY OSOFTPAY"; 
+                receipt.FooterLine1 = "*** REPRINTED RECEIPT ***";
+                receipt.FooterLine2 = $"Reprinted: {DateTime.Now:dd MMM yyyy HH:mm} | POWERED BY OSOFTPAY";
             }
 
             receipt.Items.Add(new ReceiptItem
@@ -92,7 +141,7 @@ namespace ZamfaraIRS.Services
                 Amount = 0m,
                 SubText = marketName
             });
-   
+
             receipt.Items.Add(new ReceiptItem
             {
                 Description = "SHOP NO",
@@ -121,7 +170,7 @@ namespace ZamfaraIRS.Services
                 SubText = DateTime.Now.ToString("dd MMM yyyy HH:mm")
             });
 
-            return await ReceiptPrinter.PrintAsync(receipt); 
+            return await PrintPaymentReceiptWithFallbackAsync(receipt);
         }
 
         public static async Task<bool> PrintPaymentReceiptAsync(
@@ -134,20 +183,20 @@ namespace ZamfaraIRS.Services
              string date,
              bool isReprint = false)
         {
-            var receipt = ReceiptPrinter.CreateBrandedReceipt(); 
+            var receipt = ReceiptPrinter.CreateBrandedReceipt();
             receipt.ReceiptBannerText = isReprint ? "SHOP PAYMENT (REPRINT)" : "OFFICIAL PAYMENT RECEIPT";
-            receipt.ReceiptNumber = refNo; 
-            receipt.AgentName = agentEmail ?? "Agent"; 
-            receipt.CollectionPoint = marketName; 
-            receipt.TotalAmount = amountPaid + balanceRemaining; 
-            receipt.AmountPaid = amountPaid; 
+            receipt.ReceiptNumber = refNo;
+            receipt.AgentName = agentEmail ?? "Agent";
+            receipt.CollectionPoint = marketName;
+            receipt.TotalAmount = amountPaid + balanceRemaining;
+            receipt.AmountPaid = amountPaid;
             receipt.AmountLeft = balanceRemaining;
             receipt.BarcodeLabel = $"https://zamfara.osoftpay.net/SingleCollections/Verify?TransactId={refNo}";
 
             if (isReprint)
             {
                 receipt.FooterLine1 = "*** REPRINTED RECEIPT ***";
-                receipt.FooterLine2 = $"Reprinted: {DateTime.Now:dd MMM yyyy HH:mm} | POWERED BY OSOFTPAY"; 
+                receipt.FooterLine2 = $"Reprinted: {DateTime.Now:dd MMM yyyy HH:mm} | POWERED BY OSOFTPAY";
             }
 
             receipt.Items.Add(new ReceiptItem
@@ -176,7 +225,7 @@ namespace ZamfaraIRS.Services
                 Amount = amountPaid
             });
 
-        
+
             receipt.Items.Add(new ReceiptItem
             {
                 Description = "DATE",
@@ -184,7 +233,7 @@ namespace ZamfaraIRS.Services
                 SubText = date
             });
 
-            return await ReceiptPrinter.PrintAsync(receipt); 
+            return await PrintPaymentReceiptWithFallbackAsync(receipt);
         }
 
         //public static async Task<bool> PrintKekeReceiptAsync(
@@ -211,7 +260,7 @@ namespace ZamfaraIRS.Services
 
         //    receipt.Items = new List<ReceiptItem>
         //    {
-             
+
         //        new ReceiptItem { Description = "SERVICE NAME", SubText = serviceName },
         //        new ReceiptItem { Description = "BODY NO:", SubText = vehiclePlateNo, Amount = 0 },
         //         new ReceiptItem { Description = "AMOUNT", Amount = receipt.AmountPaid },
@@ -253,21 +302,9 @@ namespace ZamfaraIRS.Services
             receipt.FooterLine1 = isReprint ? "*** REPRINTED RECEIPT ***" : "Status: APPROVED SUCCESSFUL";
             receipt.FooterLine2 = "POWERED BY OSOFTPAY";
 
-            try
-            {
-                // Route through the watermark engine instead of the generic queue
-                var printer = new BluetoothPrinterService(use80mm: false);
-                var result = await printer.PrintReceiptWithWatermarkAsync(
-                    receipt,
-                    watermarkText: "ZIRS",
-                    logoAssetName: "Logo.png"
-                );
-                return result.Success;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            // Route through Bluetooth-first, Trendit-fallback, both with the
+            // watermark underneath.
+            return await PrintPaymentReceiptWithFallbackAsync(receipt);
         }
 
         //public static async Task<bool> PrintTestReceiptAsync()
@@ -311,4 +348,3 @@ namespace ZamfaraIRS.Services
         }
     }
 }
-    
