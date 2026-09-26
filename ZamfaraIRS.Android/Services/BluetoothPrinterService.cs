@@ -1,12 +1,8 @@
-﻿using Android.App;
-using Android.Bluetooth;
-using Android.Content;
+﻿using Android.Bluetooth;
 using Android.Graphics;
 using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 using Java.Util;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,10 +10,148 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ZamfaraIRS.Services;
+using Xamarin.Essentials;
 
-namespace ZamfaraIRS.Droid.Services
+namespace ZamfaraIRS.Services
 {
+    // =========================================================================
+    //  PRINT SECTION ENUM
+    // =========================================================================
+
+    public enum PrintSection
+    {
+        Init = 0,
+        Logo = 1,
+        Header = 2,
+        Body = 3,
+        Totals = 4,
+        Footer = 5,
+        FeedAndCut = 6
+    }
+
+    // =========================================================================
+    //  PRINT CHUNK
+    // =========================================================================
+
+    public sealed class PrintChunk
+    {
+        public string Id { get; }
+        public string Label { get; }
+        public PrintSection Section { get; }
+        public byte[] Data { get; }
+
+        public PrintChunk(PrintSection section, string label, byte[] data)
+        {
+            Section = section;
+            Label = label ?? throw new ArgumentNullException(nameof(label));
+            Data = data ?? throw new ArgumentNullException(nameof(data));
+            Id = string.Format("{0}:{1}", (int)section, label);
+        }
+
+        public override string ToString() =>
+            string.Format("[{0}] {1} ({2} B)", Section, Label, Data.Length);
+    }
+
+    // =========================================================================
+    //  PRINT JOB STATE  –  checkpoint / resume tracking
+    // =========================================================================
+
+    public sealed class PrintJobState
+    {
+        private static readonly object _syncLock = new object();
+        private readonly HashSet<string> _completedIds;
+
+        public PrintJobState(string jobId, bool persistState = false)
+        {
+            JobId = jobId ?? throw new ArgumentNullException(nameof(jobId));
+            PersistState = persistState;
+            _completedIds = LoadPersistedIds();
+        }
+
+        public string JobId { get; }
+        public bool PersistState { get; set; }
+
+        public int CompletedCount { get { lock (_syncLock) return _completedIds.Count; } }
+
+        public bool IsCompleted(PrintChunk chunk)
+        {
+            lock (_syncLock) return _completedIds.Contains(chunk.Id);
+        }
+
+        public void MarkCompleted(PrintChunk chunk)
+        {
+            lock (_syncLock)
+            {
+                _completedIds.Add(chunk.Id);
+                if (PersistState) Persist();
+            }
+        }
+
+        public void Reset()
+        {
+            lock (_syncLock)
+            {
+                _completedIds.Clear();
+                if (PersistState) Preferences.Remove(PrefKey);
+            }
+        }
+
+        private string PrefKey { get { return string.Format("PrintJobState_{0}", JobId); } }
+
+        private HashSet<string> LoadPersistedIds()
+        {
+            if (!PersistState) return new HashSet<string>();
+            try
+            {
+                var json = Preferences.Get(PrefKey, null);
+                if (!string.IsNullOrEmpty(json))
+                    return JsonConvert.DeserializeObject<HashSet<string>>(json)
+                           ?? new HashSet<string>();
+            }
+            catch { }
+            return new HashSet<string>();
+        }
+
+        private void Persist()
+        {
+            try { Preferences.Set(PrefKey, JsonConvert.SerializeObject(_completedIds)); }
+            catch (Exception ex) { Log(string.Format("persist failed – {0}", ex.Message)); }
+        }
+
+        private static void Log(string msg)
+            => System.Diagnostics.Debug.WriteLine(string.Format("[PrintJobState] {0}", msg));
+    }
+
+    // =========================================================================
+    //  PRINT SESSION RESULT
+    // =========================================================================
+
+    public sealed class PrintSessionResult
+    {
+        public bool Success { get; set; }
+        public int ChunksSent { get; set; }
+        public int TotalChunks { get; set; }
+        public string FailedChunkLabel { get; set; }
+        public string ErrorMessage { get; set; }
+
+        public static PrintSessionResult Ok(int sent, int total)
+        {
+            return new PrintSessionResult { Success = true, ChunksSent = sent, TotalChunks = total };
+        }
+
+        public static PrintSessionResult Fail(string chunk, string error, int sent, int total)
+        {
+            return new PrintSessionResult
+            {
+                Success = false,
+                FailedChunkLabel = chunk,
+                ErrorMessage = error,
+                ChunksSent = sent,
+                TotalChunks = total
+            };
+        }
+    }
+
     // =========================================================================
     //  BLUETOOTH PRINTER SERVICE  –  implements IPrinterService
     // =========================================================================
@@ -26,6 +160,7 @@ namespace ZamfaraIRS.Droid.Services
     {
         #region ── Constants ──────────────────────────────────────────────────
 
+        private const string DefaultWatermarkText = "ZIRS Services";
         private const string SPP_UUID = "00001101-0000-1000-8000-00805f9b34fb";
         private const int DOTS_58MM = 384;
         private const int DOTS_80MM = 576;
@@ -67,21 +202,82 @@ namespace ZamfaraIRS.Droid.Services
 
         #endregion
 
+
+
         #region ── Supported Printer Names ────────────────────────────────────
 
         private static readonly HashSet<string> SupportedPrinters =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                "RRN2OP",
-                "MPT-II", "MTP-II_89EB", "MTP-II-6111",
-                "RPP02N", "RPP210",
-                "MP300", "IposPrinter", "FP8800", "S60",
-                "InnerPrinter", "Internal Bluetooth Printer",
-                "printer001", "b906", "ANDROID BT", "CS10",
-                "Q2i"
+        "RRN2OP",
+        "MPT-II", "MTP-II_89EB", "MTP-II-6111",
+        "RPP02N", "RPP210",
+        "MP300", "IposPrinter", "FP8800", "S60",
+        "InnerPrinter", "Internal Bluetooth Printer", // Common for SmartPOS
+        "printer001", "b906", "ANDROID BT", "CS10",
+        "Q2i",
+        "MP-58T",  // Your previously added printer
+        "S680",    // Added for Trendit S680
+        "TRENDIT"  // Added for Trendit Manufacturer
             };
 
         #endregion
+
+        private const int BT_POWERON_POLL_MS = 250;
+        private const int BT_POWERON_MAX_POLLS = 24;      // ~6s ceiling
+        private const int BT_BOND_LIST_SETTLE_MS = 600;   // bonded list can be empty for a beat right after power-on
+
+        /// <summary>
+        /// Same checks as the old EnsureBluetoothReady(), but for API ≤ 30 it
+        /// force-powers the adapter instead of just throwing when it's off.
+        /// Call this INSTEAD of EnsureBluetoothReady() from the print entry
+        /// points; keep the old sync method for anything that still needs it.
+        /// </summary>
+        private async Task EnsureBluetoothReadyAsync(CancellationToken token)
+        {
+            var adapter = BluetoothAdapter.DefaultAdapter
+                ?? throw new PrinterException("Device has no Bluetooth adapter.");
+
+            if (!adapter.IsEnabled)
+            {
+                int sdk = (int)Build.VERSION.SdkInt;
+
+                if (sdk < 31)
+                {
+                    // Pre-Android 12: BLUETOOTH_ADMIN is enough to power the
+                    // radio on directly. Many locked-down POS ROMs on 7/8 ship
+                    // with Bluetooth off by default and no Settings shortcut
+                    // for the cashier, so this is the "force" the ticket asks for.
+                    Log("Bluetooth is off — forcing silent enable (API < 31).");
+                    adapter.Enable();
+
+                    for (int i = 0; i < BT_POWERON_MAX_POLLS && !adapter.IsEnabled; i++)
+                        await Task.Delay(BT_POWERON_POLL_MS, token);
+
+                    if (!adapter.IsEnabled)
+                        throw new PrinterException(
+                            "Bluetooth radio did not power on in time. Toggle it manually and retry.");
+
+                    // Give the stack a moment to repopulate the bonded-device
+                    // cache — right after Enable() this can briefly be empty
+                    // even though pairing is still intact.
+                    await Task.Delay(BT_BOND_LIST_SETTLE_MS, token);
+                }
+                else
+                {
+                    // API 31+: Android requires the user to confirm via the
+                    // system "Allow app to turn on Bluetooth?" dialog. We
+                    // can't (and shouldn't try to) bypass that.
+                    throw new PrinterException(
+                        "Bluetooth is off. Please enable it — Android 12+ requires confirming the system prompt.");
+                }
+            }
+
+            if (FindPrinterDevice(adapter) == null)
+                throw new PrinterException(
+                    "No paired printer found. Pair the printer in Android Settings first.");
+        }
+
 
         #region ── Fields ─────────────────────────────────────────────────────
 
@@ -152,7 +348,7 @@ namespace ZamfaraIRS.Droid.Services
         public async Task PrintReceiptAsync(
             ReceiptData receipt,
             string logoAssetName = "Logo.png",
-            string watermarkText = "BOIRS",
+            string watermarkText = DefaultWatermarkText,
             PrintRetryPolicy retryPolicy = null,
             IProgress<PrintProgress> progress = null,
             CancellationToken cancellationToken = default)
@@ -168,7 +364,7 @@ namespace ZamfaraIRS.Droid.Services
             // Wrap progress so every internal chunk event emits a PrintProgress object
             var bridgeProgress = BuildBridgeProgress(progress, sessionId);
 
-            var result = await PrintReceiptAsync(
+            var result = await PrintReceiptResumableAsync(
                 receipt,
                 jobId: null,
                 logoAssetName: logoAssetName,
@@ -186,6 +382,57 @@ namespace ZamfaraIRS.Droid.Services
                         result.TotalChunks));
         }
 
+
+        private List<ReceiptLine> BuildReceiptTextLines(ReceiptData receipt)
+        {
+            var lines = new List<ReceiptLine>();
+            void Add(string text, bool bold = false, bool center = false,
+                     string right = null, bool dh = false)
+                => lines.Add(new ReceiptLine
+                {
+                    Text = text,
+                    Right = right,
+                    Bold = bold,
+                    Center = center,
+                    DoubleHeight = dh
+                });
+            void Rule() => lines.Add(new ReceiptLine { IsDivider = true });
+
+            Add(receipt.StoreName, bold: true, center: true);
+            if (!string.IsNullOrWhiteSpace(receipt.StorePhone))
+                Add(receipt.StorePhone, center: true);
+            Rule();
+            Add("OFFICIAL RECEIPT", bold: true, center: true, dh: true);
+            Rule();
+            Add("Date  : " + receipt.PrintDate.ToString("dd/MM/yyyy HH:mm:ss"));
+            Add("Ref   : " + receipt.ReceiptNumber);
+            Add("Agent : " + receipt.AgentName);
+            Add("Point : " + receipt.CollectionPoint);
+            Rule();
+
+            foreach (var item in receipt.Items)
+            {
+                if (item.Amount == 0m && !string.IsNullOrWhiteSpace(item.SubText))
+                {
+                    Add(item.Description + ": " + item.SubText, center: true);
+                }
+                else
+                {
+                    Add(item.Description, right: "N" + item.Amount.ToString("###,###.00"));
+                    if (!string.IsNullOrWhiteSpace(item.SubText))
+                        Add("  " + item.SubText);
+                }
+            }
+
+            Rule();
+            if (receipt.AmountPaid > 0m)
+                Add("AMOUNT PAID", bold: true, right: "N" + receipt.AmountPaid.ToString("###,###.00"));
+            Rule();
+            Add(receipt.FooterLine2 ?? " POWERED BY OSOFTPAY ", bold: true, center: true);
+            Rule();
+
+            return lines;
+        }
         // =====================================================================
         //  IPrinterService  –  PrintTestPageAsync  (with PrintRetryPolicy)
         // =====================================================================
@@ -220,6 +467,115 @@ namespace ZamfaraIRS.Droid.Services
             finally { cts.Dispose(); }
         }
 
+
+        private Bitmap ComposeReceiptBitmap(List<ReceiptLine> lines, int width)
+        {
+            using (var normalPaint = new Paint(PaintFlags.AntiAlias)
+            {
+                TextSize = 26,
+                Color = Color.Black,
+            })
+            using (var boldPaint = new Paint(PaintFlags.AntiAlias)
+            {
+                TextSize = 26,
+                Color = Color.Black,
+                FakeBoldText = true,
+            })
+            using (var dhPaint = new Paint(PaintFlags.AntiAlias)
+            {
+                TextSize = 34,
+                Color = Color.Black,
+                FakeBoldText = true,
+            })
+            {
+                normalPaint.SetTypeface(Typeface.Monospace);
+                boldPaint.SetTypeface(Typeface.Monospace);
+                dhPaint.SetTypeface(Typeface.Monospace);
+
+                var fm = normalPaint.GetFontMetrics();
+                int lineHeight = (int)Math.Ceiling(fm.Descent - fm.Ascent) + 8;
+                int dividerGap = 10;
+                const int margin = 14;
+
+                int height = margin * 2;
+                foreach (var l in lines)
+                    height += l.IsDivider ? dividerGap : (l.DoubleHeight ? lineHeight + 12 : lineHeight);
+
+                var bmp = Bitmap.CreateBitmap(width, height, Bitmap.Config.Argb8888);
+                var canvas = new Canvas(bmp);
+                canvas.DrawColor(Color.White);
+
+                int y = margin - (int)fm.Ascent;
+                foreach (var l in lines)
+                {
+                    if (l.IsDivider)
+                    {
+                        using (var rulePaint = new Paint { Color = Color.Black, StrokeWidth = 2 })
+                            canvas.DrawLine(margin, y - lineHeight / 3f, width - margin, y - lineHeight / 3f, rulePaint);
+                        y += dividerGap;
+                        continue;
+                    }
+
+                    var paint = l.DoubleHeight ? dhPaint : (l.Bold ? boldPaint : normalPaint);
+                    int rowHeight = l.DoubleHeight ? lineHeight + 12 : lineHeight;
+
+                    if (l.Right != null)
+                    {
+                        float rightWidth = paint.MeasureText(l.Right);
+                        canvas.DrawText(l.Text, margin, y, paint);
+                        canvas.DrawText(l.Right, width - margin - rightWidth, y, paint);
+                    }
+                    else
+                    {
+                        float textWidth = paint.MeasureText(l.Text);
+                        float x = l.Center ? (width - textWidth) / 2f : margin;
+                        canvas.DrawText(l.Text, x, y, paint);
+                    }
+
+                    y += rowHeight;
+                }
+
+                canvas.Save();
+                return bmp;
+            }
+        }
+
+        // Renders "watermarkText" as one large, bold word rotated 90° (reads
+        // bottom-to-top), the same treatment TrenditPrinterService applies for
+        // the built-in POS printer, so a receipt looks identical whether it
+        // came off the Bluetooth mobile printer or the Trendit S680. Returned
+        // as its own bitmap so it can be sliced into raster chunks and sent
+        // as a separate band underneath the receipt body, not mixed into it.
+        private static Bitmap BuildVerticalWatermarkBitmap(string watermarkText, int width)
+        {
+            const float textSize = 60f;
+            const int margin = 40;
+
+            using (var paint = new Paint(PaintFlags.AntiAlias)
+            {
+                TextSize = textSize,
+                Color = Color.Black,
+                FakeBoldText = true,
+            })
+            {
+                paint.SetTypeface(Typeface.DefaultBold);
+                paint.TextAlign = Paint.Align.Center;
+
+                int bandHeight = (int)Math.Ceiling(paint.MeasureText(watermarkText)) + margin * 2;
+
+                var bmp = Bitmap.CreateBitmap(width, bandHeight, Bitmap.Config.Argb8888);
+                var canvas = new Canvas(bmp);
+                canvas.DrawColor(Color.White);
+                canvas.Save();
+                canvas.Translate(width / 2f, bandHeight / 2f);
+                canvas.Rotate(-90);
+                canvas.DrawText(watermarkText, 0, 0, paint);
+                canvas.Restore();
+
+                return bmp;
+            }
+        }
+
         // =====================================================================
         //  RETRY CONFIGURATION
         // =====================================================================
@@ -228,42 +584,23 @@ namespace ZamfaraIRS.Droid.Services
         public int RetryBaseDelayMs { get; set; } = 1_500;
 
         // =====================================================================
-        //  BACKWARD-COMPATIBLE API  (no retryPolicy / progress params)
-        // =====================================================================
-
-        public async Task PrintReceiptAsync(
-            ReceiptData receipt,
-            string logoAssetName = "Logo.png",
-            string watermarkText = "BOIRS",
-            CancellationToken cancellationToken = default)
-        {
-            var result = await PrintReceiptAsync(
-                receipt,
-                jobId: null,
-                logoAssetName: logoAssetName,
-                watermarkText: watermarkText,
-                persistState: false,
-                internalProgress: null,
-                cancellationToken: cancellationToken);
-
-            if (!result.Success)
-                throw new PrinterException(
-                    string.Format("Print failed at '{0}': {1} ({2}/{3} sections sent)",
-                        result.FailedChunkLabel,
-                        result.ErrorMessage,
-                        result.ChunksSent,
-                        result.TotalChunks));
-        }
-
-        // =====================================================================
         //  RESUMABLE CORE API
         // =====================================================================
+        //
+        // Named PrintReceiptResumableAsync (not PrintReceiptAsync) on purpose:
+        // it shares the "logoAssetName"/"watermarkText" parameter names with
+        // the canonical IPrinterService.PrintReceiptAsync overload above, and
+        // C# resolves named-argument calls by name, not arity - two methods
+        // of the same name with overlapping optional parameter names are a
+        // guaranteed CS0121 "ambiguous call" trap for any caller that omits
+        // this method's extra jobId/persistState/internalProgress arguments.
+        // Giving it a distinct name removes that trap entirely.
 
-        public async Task<PrintSessionResult> PrintReceiptAsync(
+        public async Task<PrintSessionResult> PrintReceiptResumableAsync(
             ReceiptData receipt,
             string jobId = null,
             string logoAssetName = "Logo.png",
-            string watermarkText = " BOIRS",
+            string watermarkText = DefaultWatermarkText,
             bool persistState = false,
             IProgress<PrintProgress> internalProgress = null,
             CancellationToken cancellationToken = default)
@@ -498,13 +835,18 @@ namespace ZamfaraIRS.Droid.Services
         {
             var chunks = new List<PrintChunk>();
 
+            // ── Init ─────────────────────────────────────────────────────────
+            // Only reset the printer. No divider, no blank line, no alignment.
+            // The logo chunk (or header if no logo) starts immediately after.
             chunks.Add(Chunk(PrintSection.Init, "Init", ms =>
             {
                 ms.Write(CMD_INIT);
-                ms.Write(CMD_ALIGN_CENTER);
-                ms.WriteText(Divider('=', _charsPerLine) + "\n");
             }));
 
+            // ── Logo ──────────────────────────────────────────────────────────
+            // No CMD_LF before or after the image — the raster command advances
+            // paper by exactly the image height. CMD_ALIGN_CENTER is set inside
+            // TryBuildLogoCommand so the image is centred, but no blank lines.
             if (!string.IsNullOrWhiteSpace(logoAssetName))
             {
                 var logoCmd = TryBuildLogoCommand(logoAssetName, maxWidth: 180);
@@ -512,6 +854,7 @@ namespace ZamfaraIRS.Droid.Services
                     chunks.Add(new PrintChunk(PrintSection.Logo, "Logo", logoCmd));
             }
 
+            // ── Header ────────────────────────────────────────────────────────
             chunks.Add(Chunk(PrintSection.Header, "Header", ms =>
             {
                 ms.Write(CHUNK_PREAMBLE);
@@ -522,12 +865,16 @@ namespace ZamfaraIRS.Droid.Services
                 if (!string.IsNullOrWhiteSpace(receipt.StorePhone))
                     ms.WriteText(receipt.StorePhone + "\n");
                 ms.WriteText(Divider('=', _charsPerLine) + "\n");
+
+                // "OFFICIAL RECEIPT" title — double-width, centred
                 ms.Write(CMD_ALIGN_CENTER);
                 ms.Write(CMD_BOLD_ON);
                 ms.Write(CMD_DWIDTH_ON);
                 ms.WriteText("OFFICIAL RECEIPT\n");
                 ms.Write(CMD_DWIDTH_OFF);
                 ms.Write(CMD_BOLD_OFF);
+
+                // Data rows — left-aligned, no blank line above them
                 ms.Write(CMD_ALIGN_LEFT);
                 ms.WriteText(Divider('=', _charsPerLine) + "\n");
                 ms.WriteText(Col("Date", receipt.PrintDate.ToString("dd/MM/yyyy HH:mm:ss"), _charsPerLine) + "\n");
@@ -537,12 +884,12 @@ namespace ZamfaraIRS.Droid.Services
                 ms.WriteText(Divider('-', _charsPerLine) + "\n");
             }));
 
+            // ── Body lines ────────────────────────────────────────────────────
             for (int i = 0; i < receipt.Items.Count; i++)
             {
                 var item = receipt.Items[i];
-                int idx = i;
 
-                chunks.Add(Chunk(PrintSection.Body, string.Format("Body_Line{0}", idx), ms =>
+                chunks.Add(Chunk(PrintSection.Body, string.Format("Body_Line{0}", i), ms =>
                 {
                     ms.Write(CHUNK_PREAMBLE);
                     if (item.Amount == 0m && !string.IsNullOrWhiteSpace(item.SubText))
@@ -568,6 +915,7 @@ namespace ZamfaraIRS.Droid.Services
                 }));
             }
 
+            // ── Totals ────────────────────────────────────────────────────────
             chunks.Add(Chunk(PrintSection.Totals, "Totals", ms =>
             {
                 ms.Write(CHUNK_PREAMBLE);
@@ -582,66 +930,67 @@ namespace ZamfaraIRS.Droid.Services
                 ms.WriteText(Divider('=', _charsPerLine) + "\n");
             }));
 
+            // ── Footer ────────────────────────────────────────────────────────
+            // REMOVED: CMD_LF before "POWERED BY OSOFTPAY".
+            // The QR code already ends with 0x0A, and the "====\n" from Totals
+            // already gives a visible gap. No extra blank line needed.
             chunks.Add(Chunk(PrintSection.Footer, "Footer", ms =>
             {
                 ms.Write(CHUNK_PREAMBLE);
+
                 if (!string.IsNullOrWhiteSpace(receipt.BarcodeLabel))
                 {
                     ms.Write(CMD_ALIGN_CENTER);
                     ms.Write(BuildQRCodeCommand(receipt.BarcodeLabel));
                     ms.WriteText(Divider('-', _charsPerLine) + "\n");
                 }
+
                 ms.Write(CMD_ALIGN_CENTER);
-                ms.Write(CMD_LF);
                 ms.Write(CMD_BOLD_ON);
-                ms.WriteText((receipt.FooterLine2 ?? " POWERED BY OSOFTPAY ") + "\n");
+                ms.WriteText((receipt.FooterLine2 ?? "POWERED BY OSOFTPAY") + "\n");
                 ms.Write(CMD_BOLD_OFF);
                 ms.WriteText(Divider('=', _charsPerLine) + "\n");
                 ms.Write(CMD_ALIGN_LEFT);
             }));
 
+            // ── Feed & Cut ────────────────────────────────────────────────────
+            // REMOVED: both CMD_LF calls that preceded CMD_FEED_CUT.
+            // ESC d 4  already feeds 4 lines before cutting — that is sufficient
+            // margin for the tear bar. The extra LFs were producing the large
+            // blank tail visible at the bottom of the receipt in the photo.
             chunks.Add(Chunk(PrintSection.FeedAndCut, "FeedAndCut", ms =>
             {
-                ms.Write(CMD_LF);
-                ms.Write(CMD_LF);
                 ms.Write(CMD_FEED_CUT);
             }));
 
             return chunks;
         }
 
+        // ── Test page ─────────────────────────────────────────────────────────
+
         private List<PrintChunk> BuildTestChunks()
         {
             var chunks = new List<PrintChunk>();
 
-            chunks.Add(Chunk(PrintSection.Init, "Init", ms => ms.Write(CMD_INIT)));
-
-            var logoCmd = TryBuildLogoCommand("Logo.png", maxWidth: 150);
-            if (logoCmd != null)
-                chunks.Add(new PrintChunk(PrintSection.Logo, "Logo", logoCmd));
+            chunks.Add(Chunk(PrintSection.Init, "Init", ms =>
+            {
+                ms.Write(CMD_INIT);
+            }));
 
             chunks.Add(Chunk(PrintSection.Header, "Header", ms =>
             {
                 ms.Write(CHUNK_PREAMBLE);
                 ms.Write(CMD_ALIGN_CENTER);
-                ms.Write(CMD_BOLD_ON);
-                ms.Write(CMD_DHEIGHT_ON);
-                ms.WriteText((App.RevenueServiceName ?? "BORNO STATE INTERNAL REVENUE SERVICE") + "\n");
-                ms.Write(CMD_DHEIGHT_OFF);
-                ms.Write(CMD_BOLD_OFF);
                 ms.WriteText("OSOFT INTEGRATED RESOURCES LTD\n");
                 ms.WriteText(Divider('=', _charsPerLine) + "\n");
-                ms.Write(CMD_LF);
                 ms.Write(CMD_BOLD_ON);
                 ms.WriteText("PRINTER STATUS: ONLINE\n");
                 ms.Write(CMD_BOLD_OFF);
                 ms.WriteText(Divider('-', _charsPerLine) + "\n");
             }));
+
             chunks.Add(Chunk(PrintSection.FeedAndCut, "FeedAndCut", ms =>
             {
-                ms.Write(CMD_ALIGN_LEFT);
-                ms.Write(CMD_LF);
-                ms.Write(CMD_LF);
                 ms.Write(CMD_FEED_CUT);
             }));
 
@@ -861,6 +1210,111 @@ namespace ZamfaraIRS.Droid.Services
             finally { ms.Dispose(); }
         }
 
+        private struct ReceiptLine
+        {
+            public string Text;
+            public string Right;      // set for two-column rows (desc + amount)
+            public bool Bold;
+            public bool Center;
+            public bool DoubleHeight;
+            public bool IsDivider;    // full-width horizontal rule instead of text
+        }
+
+
+        private List<PrintChunk> BuildWatermarkedReceiptChunks(
+          ReceiptData receipt, string watermarkText, string logoAssetName)
+        {
+            var chunks = new List<PrintChunk>();
+
+            chunks.Add(Chunk(PrintSection.Init, "Init", ms => ms.Write(CMD_INIT)));
+
+            // Logo stays a separate raster block ahead of the watermarked body —
+            // it's a fixed asset, not part of what needs the watermark under it.
+            if (!string.IsNullOrWhiteSpace(logoAssetName))
+            {
+                var logoCmd = TryBuildLogoCommand(logoAssetName, maxWidth: 180);
+                if (logoCmd != null)
+                    chunks.Add(new PrintChunk(PrintSection.Logo, "Logo", logoCmd));
+            }
+
+            var lines = BuildReceiptTextLines(receipt);
+            using (var bitmap = ComposeReceiptBitmap(lines, _printerDots))
+            {
+                chunks.AddRange(SliceBitmapToRasterChunks(bitmap, "Content_Band"));
+            }
+
+            // Large bold vertical watermark, stamped underneath the receipt
+            // body. Only set for payment receipts - registrations and the
+            // test page pass watermarkText: null and skip this, mirroring
+            // TrenditPrinterService's behavior for the built-in POS printer.
+            if (!string.IsNullOrWhiteSpace(watermarkText))
+            {
+                using (var wmBitmap = BuildVerticalWatermarkBitmap(watermarkText, _printerDots))
+                {
+                    chunks.AddRange(SliceBitmapToRasterChunks(wmBitmap, "Watermark_Band"));
+                }
+            }
+
+            chunks.Add(Chunk(PrintSection.FeedAndCut, "FeedAndCut", ms =>
+            {
+                ms.Write(CMD_LF);
+                ms.Write(CMD_LF);
+                ms.Write(CMD_FEED_CUT);
+            }));
+
+            return chunks;
+        }
+
+        private const int WATERMARK_BAND_ROWS = 120;
+
+        private List<PrintChunk> SliceBitmapToRasterChunks(Bitmap bmp, string labelPrefix = "WM_Band")
+        {
+            int w = bmp.Width, h = bmp.Height;
+            int widthBytes = w / 8;
+            var chunks = new List<PrintChunk>();
+            int band = 0;
+
+            for (int startY = 0; startY < h; startY += WATERMARK_BAND_ROWS)
+            {
+                int bandHeight = Math.Min(WATERMARK_BAND_ROWS, h - startY);
+                var pixels = new int[w * bandHeight];
+                bmp.GetPixels(pixels, 0, w, 0, startY, w, bandHeight);
+
+                byte[] raster = new byte[widthBytes * bandHeight];
+                for (int y = 0; y < bandHeight; y++)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        int pixel = pixels[y * w + x];
+                        float luma = 0.299f * ((pixel >> 16) & 0xFF)
+                                   + 0.587f * ((pixel >> 8) & 0xFF)
+                                   + 0.114f * (pixel & 0xFF);
+                        if (luma < MONO_THRESHOLD)
+                            raster[y * widthBytes + x / 8] |= (byte)(1 << (7 - x % 8));
+                    }
+                }
+
+                var ms = new MemoryStream();
+                try
+                {
+                    byte xL = (byte)(widthBytes & 0xFF);
+                    byte xH = (byte)((widthBytes >> 8) & 0xFF);
+                    byte yL = (byte)(bandHeight & 0xFF);
+                    byte yH = (byte)((bandHeight >> 8) & 0xFF);
+                    ms.Write(new byte[] { 0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH }, 0, 8);
+                    ms.Write(raster, 0, raster.Length);
+
+                    chunks.Add(new PrintChunk(
+                        PrintSection.Body,
+                        string.Format("{0}_{1}", labelPrefix, band++),
+                        ms.ToArray()));
+                }
+                finally { ms.Dispose(); }
+            }
+
+            return chunks;
+        }
+
         private static string Col(string label, string value, int width)
         {
             string full = string.Format("{0,-8}: {1}", label, value);
@@ -911,10 +1365,51 @@ namespace ZamfaraIRS.Droid.Services
             ClearActiveJob();
             GC.SuppressFinalize(this);
         }
+
+        public async Task<PrintSessionResult> PrintReceiptWithWatermarkAsync(
+       ReceiptData receipt,
+       string watermarkText = DefaultWatermarkText,
+       string logoAssetName = "Logo.png",
+       PrintRetryPolicy retryPolicy = null,
+       IProgress<PrintProgress> progress = null,
+       CancellationToken cancellationToken = default)
+        {
+            var policy = retryPolicy ?? PrintRetryPolicy.Default;
+            MaxChunkRetries = policy.MaxAttempts;
+            RetryBaseDelayMs = policy.RetryDelayMs;
+
+            await RequireBluetoothPermissionsStaticAsync();
+            await EnsureBluetoothReadyAsync(cancellationToken);
+
+            string jobId = string.Format("wm_receipt_{0:yyyyMMddHHmmssff}", DateTime.UtcNow);
+            var chunks = await Task.Run(
+                () => BuildWatermarkedReceiptChunks(receipt, watermarkText, logoAssetName),
+                cancellationToken);
+            var state = new PrintJobState(jobId);
+
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            try
+            {
+                cts.CancelAfter(PRINT_TIMEOUT_MS);
+                var result = await PrintChunksAsync(chunks, state, progress, cts.Token);
+                if (!result.Success)
+                    throw new PrinterException(
+                        string.Format("Watermarked print failed at '{0}': {1} ({2}/{3} bands sent)",
+                            result.FailedChunkLabel, result.ErrorMessage,
+                            result.ChunksSent, result.TotalChunks));
+                return result;
+            }
+            finally { cts.Dispose(); }
+        }
+
+        private static Task RequireBluetoothPermissionsStaticAsync()
+         => BluetoothPermissionHelper.RequestAsync().ContinueWith(t =>
+         {
+             if (!t.Result)
+                 throw new PrinterException(
+                     "Bluetooth permission denied. On Android 12+ go to App Settings → Permissions → Nearby devices and allow.");
+         });
     }
-
-
-
 
     // =========================================================================
     //  STREAM EXTENSIONS
@@ -933,4 +1428,57 @@ namespace ZamfaraIRS.Droid.Services
             ms.Write(bytes, 0, bytes.Length);
         }
     }
+
+    // =========================================================================
+    //  DATA MODELS
+    // =========================================================================
+
+
+    public sealed class ReceiptData
+    {
+        public string StoreName { get; set; } = "ZAMFARA STATE INTERNAL REVENUE ";
+        public string StoreSubTitle { get; set; }
+        public string StoreAddress { get; set; } = "Zamfara State Revenue Service";
+        public string StorePhone { get; set; } = "Contact us: 0813 284 9470, 0806 161 7026";
+        public string ReceiptNumber { get; set; } = "N/A";
+        public string AgentName { get; set; }
+        public string CollectionPoint { get; set; }
+        public string Consultant { get; set; }
+        public string SuperAgent { get; set; }
+        public DateTime PrintDate { get; set; } = DateTime.Now;
+        public List<ReceiptItem> Items { get; set; } = new List<ReceiptItem>();
+        public decimal TotalAmount { get; set; }
+        public decimal AmountPaid { get; set; }
+        public decimal AmountLeft { get; set; }
+
+        public string FooterLine1 { get; set; } = "Thank You!";
+        public string FooterLine2 { get; set; } = "POWERED BY OSOFTPAY";
+
+        /// <summary>
+        /// Full verification URL encoded as a QR code on the receipt.
+        /// Set to null or empty to skip the QR block entirely.
+        /// </summary>
+        public string BarcodeLabel { get; set; } =
+            "https://zamfara.osoftpay.net/singlecollections/verify?TransactId=";
+        public string ReceiptBannerText { get; internal set; }
+    }
+
+    public sealed class ReceiptItem
+    {
+        public string Description { get; set; }
+        public decimal Amount { get; set; }
+        public string SubText { get; set; }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  CUSTOM EXCEPTION
+    // ══════════════════════════════════════════════════════════════
+
+    public sealed class PrinterException : Exception
+    {
+        public PrinterException(string message) : base(message) { }
+        public PrinterException(string message, Exception inner) : base(message, inner) { }
+    }
+
+
 }

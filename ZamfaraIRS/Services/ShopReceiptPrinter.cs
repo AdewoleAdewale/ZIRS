@@ -45,13 +45,20 @@ namespace ZamfaraIRS.Services
             }
 
             // 2 ── Fall back to the Trendit POS SDK (built-in printer)
-            var internalPrinter = DependencyService.Get<IInternalPrinterService>();
-            if (internalPrinter != null && internalPrinter.IsSmartPOSTerminal())
+            try
             {
-                return await internalPrinter.PrintReceiptAsync(
-                    receipt,
-                    logoAssetName: logoAssetName,
-                    watermarkText: BrandConfig.ReceiptWatermark);
+                var internalPrinter = DependencyService.Get<IInternalPrinterService>();
+                if (internalPrinter != null && internalPrinter.IsSmartPOSTerminal())
+                {
+                    return await internalPrinter.PrintReceiptAsync(
+                        receipt,
+                        logoAssetName: logoAssetName,
+                        watermarkText: BrandConfig.ReceiptWatermark);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ShopReceiptPrinter] Trendit SDK print failed: {ex.Message}");
             }
 
             return false;
