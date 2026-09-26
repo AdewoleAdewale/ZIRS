@@ -116,6 +116,7 @@
     <Compile Include="Services\BluetoothPermissionProvider.cs" />
     <Compile Include="Services\BluetoothPrinterService.cs" />
     <Compile Include="Services\PrinterDiagnosticsService.cs" />
+    <Compile Include="Services\TrenditPrinterService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />

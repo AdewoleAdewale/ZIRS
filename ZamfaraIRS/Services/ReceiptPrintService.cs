@@ -24,10 +24,57 @@ namespace ZamfaraIRS.Services
             return DependencyService.Get<IPrinterService>() ?? new BluetoothPrinterService(use80mm: false);
         }
 
+        //public async Task PrintTestReceiptAsync()
+        //{
+        //    var printer = GetPrinter();
+        //    if (printer != null) await printer.PrintTestPageAsync();
+        //}
+
+        private IPrinterService GetBluetoothPrinter()
+        {
+            return DependencyService.Get<IPrinterService>() ?? new BluetoothPrinterService(use80mm: false);
+        }
+
+        private IInternalPrinterService GetInternalPrinter()
+        {
+            return DependencyService.Get<IInternalPrinterService>();
+        }
+
+        private async Task<bool> ExecutePrintJobAsync(ReceiptData receipt)
+        {
+            var internalPrinter = GetInternalPrinter();
+
+            // Check if device is a Trendit S680 Terminal
+            if (internalPrinter != null && internalPrinter.IsSmartPOSTerminal())
+            {
+                return await internalPrinter.PrintReceiptAsync(receipt);
+            }
+
+            // Fallback to standard Bluetooth SPP for standard phones + MP-58T
+            var bluetoothPrinter = GetBluetoothPrinter();
+            if (bluetoothPrinter != null)
+            {
+                await bluetoothPrinter.PrintReceiptAsync(receipt, null);
+                return true;
+            }
+
+            return false;
+        }
+
         public async Task PrintTestReceiptAsync()
         {
-            var printer = GetPrinter();
-            if (printer != null) await printer.PrintTestPageAsync();
+            var internalPrinter = GetInternalPrinter();
+            if (internalPrinter != null && internalPrinter.IsSmartPOSTerminal())
+            {
+                await internalPrinter.PrintTestPageAsync();
+                return;
+            }
+
+            var bluetoothPrinter = GetBluetoothPrinter();
+            if (bluetoothPrinter != null)
+            {
+                await bluetoothPrinter.PrintTestPageAsync();
+            }
         }
 
         public async Task PrintRegistrationReceiptAsync(string businessName, string payerId, string marketName, string agentEmail)
